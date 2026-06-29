@@ -34,3 +34,4 @@
 - Android deploy verification：`cmd /c run_android.bat 10AD7E32MH00169` 已成功 build、sync、deploy `app-debug.apk` 到手機 `10AD7E32MH00169`。
 - APP-A4 方向確認：手機錄影導引以「工地/施工範圍掃描」為主，不用單一桌上模型當範例；中文 UI，亮色工程工具感，導引沿施工區邊線、補拍高低角度、陰影遮蔽與畫面重疊。
 - APP-A4 spec 已建立：`docs/superpowers/specs/2026-06-29-my3dgsapp-construction-capture-guidance-design.md`；v0.1 先用 WebView `getUserMedia` + `MediaRecorder` 做 App 內錄影與中文 HUD，保留 `匯入 MP4` 備援，不做真 AI 覆蓋率或 native CameraX。
+- APP-A4 工地導引概念圖已留存到 repo：`docs/assets/app-a4-construction-capture-guidance.png`，spec 改用 repo 內圖片連結。
