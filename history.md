@@ -29,3 +29,6 @@
 - APP-A3 plan 已建立並提交：`docs/superpowers/plans/2026-06-29-my3dgsapp-capacitor-shell.md`。
 - APP-A3 skeleton 已建立：`my3dgsapp/` 使用 Capacitor 8.4.1 + Vite 8.1.0 + TypeScript 6.0.3；包含 pages、services interfaces、models、Easymap/Cesium placeholder、placement model、viewer link helpers、Android/iOS native project。
 - APP-A3 verification：`npm install` 無 vulnerability；`npm run build` 通過；`npx cap add android`、`npx cap add ios`、`npx cap sync` 通過。TS6 CSS side-effect import 需 `src/vite-env.d.ts`，已補。
+- Android deploy 決策：新增 `run_android.bat`，固定使用 `C:\Program Files\Java\jdk-22` 與 `D:\Android\sdk`，自動偵測第一台 authorized Android device 或接受 serial 參數。
+- Android deploy 踩雷：全域 `JAVA_HOME` 指到 JDK 8，Gradle 會失敗；JDK 17 也不足，Capacitor Android 目前需要 source release 21，需使用 JDK 21+。本機以 JDK 22 成功。
+- Android deploy verification：`cmd /c run_android.bat 10AD7E32MH00169` 已成功 build、sync、deploy `app-debug.apk` 到手機 `10AD7E32MH00169`。
