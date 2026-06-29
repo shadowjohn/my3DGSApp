@@ -1,0 +1,185 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #101418;
+  color: #f5f7fa;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
+
+.app-content {
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 16px 88px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.page-header p,
+.muted {
+  color: #a9b4c0;
+}
+
+.panel {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #2b3540;
+  border-radius: 8px;
+  background: #182029;
+}
+
+.form-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.form-panel label {
+  display: grid;
+  gap: 6px;
+  color: #cfd8e3;
+}
+
+.form-panel input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #3a4754;
+  border-radius: 6px;
+  background: #0f151b;
+  color: #f5f7fa;
+}
+
+.primary-action,
+.file-picker,
+button.primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #39a0ff;
+  color: #06111d;
+  font-weight: 700;
+}
+
+.file-picker input {
+  display: none;
+}
+
+.checklist {
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+.progress {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #2b3540;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: #39a0ff;
+}
+
+.status-list {
+  display: grid;
+  gap: 10px;
+}
+
+.status-list div {
+  padding: 12px;
+  border-radius: 6px;
+  background: #101820;
+}
+
+.map-page {
+  position: fixed;
+  inset: 0 0 64px;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  background: #0b1117;
+}
+
+.map-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+  color: #cfd8e3;
+}
+
+.map-placeholder span {
+  display: block;
+  margin-top: 10px;
+  color: #8795a3;
+  font-size: 14px;
+}
+
+.record-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 84px;
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #ff4d4f;
+  color: white;
+  font-weight: 800;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.tabbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: 64px;
+  border-top: 1px solid #26313b;
+  background: #111820;
+}
+
+.tabbar-item {
+  display: grid;
+  place-items: center;
+  color: #95a3b1;
+  font-size: 13px;
+}
+
+.tabbar-item.active {
+  color: #39a0ff;
+}

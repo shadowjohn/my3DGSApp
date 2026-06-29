@@ -1,0 +1,122 @@
+2025/10/08
+  add: get3DGroundAltitudeSync 可以直接抓某個經緯度的高
+  add: highlightXY 在 3D 模式也可以使用  
+2025/10/17
+  add: dgMarker 增加 ondragstart  
+2025/11/18
+  add: set3DCesiumPath 可指定 cesium 來源目錄  
+2025/11/20
+  add: 3dtiles 增加 setFeatureClick  
+  add: 3dtiles 增加 setFeatureHover
+2025/12/10
+  add: enable3DGroundVisibility 可以看到地底的東西
+  add: disable3DGroundVisibility 停止看到地底的東西
+  fix: removeItem 在 dgMarker 可以移除 Overlayer 類型
+2025/12/19
+  fix: kmz 如果多一層目錄，也可以正常抓到
+  fix: 修正 jsZip 重複使用的問題
+2025/12/22
+  add: enable3DGoogleBuilding 開啟 Google 建物圖  
+  add: disable3DGoogleBuilding 關閉 Google 建物圖  
+  add: enable3DOsmBuilding 開啟 Osm 建物圖  
+  add: disable3DOsmBuilding 關閉 Osm 建物圖  
+2026/01/07
+  fix: 3dtiles onload 功能  
+2026/01/16
+  add: 增加 2D 專用 dgWebGLPoint 類別
+  add: dgWebGLPoint 增加 setXY getXY
+  add: 3DFPSMode 防地板抖動，3DFPSMode 加上 stop function   
+2026/01/20
+  fix: 更新 get3DGroundAltitude callback 穩定性
+  add: async get3DGroundAltitudeAsync 使用 await 取 lon、lat 高度
+  add: 增加 isEnable3DGoogleBuilding 檢查是否有打開 Google 建物圖  
+  add: 增加 isEnable3DOsmBuilding 檢查是否有打開 Osm 建物圖  
+  fix: 修正 isEnabled3DTerrain 回應的狀況
+  add: 增加 輸入 wktGetCenter string 取得中心點 x,y
+  fix: 移除 openInfoWindow _startPopup 移除 autoPan，避免圖台、3D 畫面時飛來飛去
+2026/01/21
+  add: register_cesium_key 使用預設 Cesium ION Key
+  add: enable3DGoogleBuilding 增加 options 參數 maximumScreenSpaceError，maximumMemoryUsage，onload  
+  add: enable3DOsmBuilding 增加 options 參數 maximumScreenSpaceError，maximumMemoryUsage，onload
+  add: _google_building 增加 setOpacity
+  add: _google_building 增加 getOpacity  
+  add: _osm_building 增加 getOpacity
+  add: _osm_building 增加 getOpacity
+2026/01/23
+  fix: map__wedget 左側指南針背後 div 高度設為 height:80%
+2026/01/26
+  fix: gltf 參數 rotate 載入時直接生效
+  fix: gltf onload 參數帶入本身  
+2026/01/28
+  add: set3DCamera 以取 get3DCamera 也可以寫回  
+  fix: 3dtiles onload 在未看到也可以生效
+  add: highlightXY 在 3D 時，支援 dgxyz
+2026/02/05
+  fix: enableEditor 修正 stop 事件
+  fix: enableScaleRotate 修正右下旋轉小點的位置
+  add: 更新 ol-ext 至 4.0.37
+2026/02/23
+  add: map._google_building.addClipGoogleByPolygon(wktStr) 可依 polygon 刪除 Google 建物
+  add: map._google_building.removeClipGoogleByPolygon(clippingPolygon) 還原 Google 刪除的建物
+2026/02/26
+  add: enable3DCSModeCamera 可以鎖定使用者位置，只改變可視角度
+  add: disable3DCSModeCamera 停止鎖定使用者可視角度
+  add: set3DPitch 設定抬頭高度
+  add: get3DPitch 取得抬頭高度
+2026/03/06
+  add: dg3D 3dtiles 增加 getData 取得 3dtiles 屬性與坐標
+  add: dg3D 3dtiles setFeature 增加取得屬性資料  
+  add: add3DGroundClassByWKT 增加挖地功能，使用 wktstr polygon 傳入
+2026/03/11
+  fix: map.easy3DMeasuring.isMesasuring -> isMeasuring 錯字
+  add: map.easy3DMeasuring 可以區分要使用貼地測量，還是空間測量
+  add: enable3DCSModeCamera 可以增加 opt baseSpeed 且用 wasd 移動位置 
+2026/03/20
+  add: dgMarker 增加 onmouseout 事件
+  add: dgWKT 增加 setFeatureMouseOut (onmouseout) 事件 
+2026/04/17
+  add: map.addGroundOverlayQuad(imgUrl, wktStr) 支援 2D、3D 非矩形影像套疊
+  add: map.removeGroundOverlayQuad(item) 移除非矩形影像套疊
+  add: removeItem 增加支援 dggroundoverlayquad 類別
+  fix: dgKml 支援 KMZ 與 gx:LatLonQuad 標籤
+  fix: 強化 KML 在 3D 模式下的貼地效果 (altitudeMode: clampToGround)
+  fix: enable3D 自動同步 2D 已掛載的 GroundOverlayQuad
+2026/04/28
+  fix: wmts 長久套三、四張以後變慢卡頓的問題  
+2026/05/06
+  fix: openInfoWindow 按 X 時，觸發 # bookmark 造成畫面跑版
+2026/05/14
+  add: dgMVT 支援 styleUrl、styleSource、styleJson、tileJson，可直接使用 Mapbox style 的 vector source 載入向量圖磚
+  add: dgMVT 增加 symbolMode、keepSymbolLayerIds，可控制 Mapbox symbol layer 顯示，避免 OpenLayers 標籤爆量
+  add: dgMVT 增加 declutter 參數，預設開啟 OpenLayers 文字與圖示避讓，改善 symbol layer 顯示效果
+  add: dgMVT 增加 interactive、renderMode、renderBuffer、updateWhileAnimating、updateWhileInteracting 參數，預設 MVT 不參與 Easymap hit detect 以降低滑鼠移動卡頓
+  add: dgMVT 增加 sync3D 參數，預設略過 OL-Cesium MVT 同步，避免切換 3D 時卡頓或噴錯
+  fix: dgMVT 修正 _src / _url 不一致，讓 new dgMVT(url, ops) 可正常載入
+  fix: dgMVT 預設樣式改為快取 ol.style.Style，降低向量圖磚 feature render 時重複建立樣式的成本
+  fix: dgMVT 套用 Mapbox style 時保留 layers Array 結構，避免 ol-mapbox-style 發生 t.slice is not a function
+  fix: Easymap pointermove 遇到第三方 feature 無 _easymapClass 時不再因 toLowerCase 噴錯
+  fix: 3D enable 後套用穩定相機參數，降低 inertia 並限制 zoom distance，改善滑鼠操作突然亂飛
+  fix: enable3DFPSMode 落地後加入地面高度 deadband、取樣節流與鎖地判斷，降低 3D Tiles / 地形 LOD 高度微跳造成的人物抖動
+  fix: enable3DFPSMode 啟動時關閉 Cesium 原生 collision detection，避免與 FPS 自訂鎖地邏輯互相拉扯造成原地抖動；關閉 FPS 時會還原原設定
+  fix: enable3DFPSMode 站穩且未移動時不再每幀 camera.setView，避免 FPS 鎖地與 Cesium 地形修正互相覆寫造成微抖
+  fix: enable3DFPSMode 坡面移動時地面高度改用上坡/下坡速度限制跟隨，降低地形 LOD 高度跳動造成的小山坡抖動
+  fix: enable3DFPSMode 地形坡面加入地面安全高度，並避免落地後把 Cesium collision 推高的相機再壓回較低高度造成沉地抖動
+  fix: enable3DFPSMode 原地站立時固定相機高度且不再觸發 camera.setView，避免靜止狀態仍被地形高度校正造成抖動
+  add: demo.html 增加 3D、地形、KMZ、大量 WKT 分批載入、輕量 MVT、dgSource VectorTile 對照測試
+  fix: Easymap loader 支援 _t 參數傳遞到 7/dg.js 與 7/easymap.js，方便測試頁更新快取
+  fix: OL-Cesium 初始化時指定 requestWebgl1 並關閉 orderIndependentTranslucency，避開部分 Cesium WebGL2 shader 編譯錯誤
+  note: OL10 WebGLVectorTileLayer 可列為 MVT 效能支線評估，但 OL-Cesium 2D/3D 切換仍為核心需求，升級前必須先驗證 olcs 相容性
+2026/05/15
+  add: openInfoWindow_setXY 可直接設定 infoWindow 位置
+  add: isOpenInfoWindowOpen 可檢查是否開啟 infoWindow
+2026/05/25
+  add: get3DScene 可取得 OL-Cesium Cesium scene，方便外部整合 3D Tiles、terrain 與 imagery layer
+  add: get3DImageryLayers 可取得 3D 模式 globe.imageryLayers，方便外部同步或切換 3D 底圖
+  add: get3DViewer 回傳資料補上 imageryLayers
+  fix: dgSource WMTS transparent 參數支援 boolean true 與字串 true，避免透明設定被誤判
+  fix: dgSource Tile/WMTS 套用 opacity 參數，避免自訂透明度在 3D/2D 底圖同步時失效
+2026/05/29
+  add: dgWKT 支援 zoomScale / zoomVisible，可讓 Text 與 Image 依 zoom level 縮放，並可設定低於或高於指定 zoom 隱藏
+  add: dgWKT 增加 setZoomScale / setZoomVisible / clearZoomScale / clearZoomVisible 全域方法，方便整個 WKT 物件套用同一組規則
+  add: appjs 元件 dgWKT 區新增「dgWKT 字體圖示隨畫面縮放」範例，示範 style_setting 與全域方法兩種寫法
+  note: 未設定 zoomScale / zoomVisible 時維持既有行為，不影響舊程式

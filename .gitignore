@@ -1,1 +1,14 @@
 .superpowers/
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+.vscode/
+.idea/
+
+my3dgsapp/android/.gradle/
+my3dgsapp/android/build/
+my3dgsapp/android/app/build/
+my3dgsapp/ios/App/Pods/
+my3dgsapp/ios/App/build/

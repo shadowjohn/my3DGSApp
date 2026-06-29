@@ -1,0 +1,26 @@
+Easymap SDK Commercial Edition Notice
+
+Copyright (c) 2006-2026 準線智慧科技股份有限公司.
+All rights reserved.
+
+Easymap SDK, including but not limited to Easymap 2D / 3D map runtime, SDK loader, public JavaScript APIs, dg* object model, map integration logic, UI behavior, documentation, examples, and proprietary source code, is commercial/proprietary software owned by 準線智慧科技股份有限公司.
+
+Use, copy, modification, redistribution, sublicensing, publication, hosting, reverse engineering, decompilation, disassembly, extraction, or creation of derivative works is permitted only under a valid written agreement, purchase order, license contract, service contract, or other written authorization issued by 準線智慧科技股份有限公司.
+
+This package may be provided to customers, government agencies, enterprise users, system integrators, or project partners only for the licensed project, licensed system, licensed domain, licensed deployment environment, or licensed scope defined in the applicable agreement.
+
+No ownership, copyright, patent, trademark, trade secret, or other intellectual property right in Easymap SDK is transferred by delivery, download, deployment, or use of this package.
+
+Third-party open-source notices apply only to the corresponding third-party components bundled with or referenced by this package. Such third-party licenses do not grant any right to use, copy, modify, redistribute, sublicense, disclose, reverse engineer, or otherwise exploit Easymap proprietary code except as expressly authorized by 準線智慧科技股份有限公司.
+
+準線智慧科技股份有限公司專注於環境監測物聯網、地理資訊系統、資訊管理系統、資料整合與智慧決策平台。Easymap 作為 2D / 3D 圖台開發核心，協助政府機關與企業快速建置可視化、可整合、可維運的空間資訊應用。
+
+Website:
+https://www.focusit.com.tw/
+
+Contact:
+414010 台中市烏日區高鐵一路268號18樓之6
+04-24516609 #5600
+簡先生
+
+Unauthorized publication, mirroring, resale, sublicensing, source extraction, public CDN hosting, package registry upload, or transfer of Easymap SDK outside the licensed scope is prohibited.

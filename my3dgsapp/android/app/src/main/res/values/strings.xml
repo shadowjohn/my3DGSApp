@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">my3DGSAPP</string>
+    <string name="title_activity_main">my3DGSAPP</string>
+    <string name="package_name">tw.threewa.my3dgsapp</string>
+    <string name="custom_url_scheme">tw.threewa.my3dgsapp</string>
+</resources>

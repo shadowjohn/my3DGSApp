@@ -26,3 +26,6 @@
 - Capture 決策：v0.1a 先支援選 MP4 或系統相機錄完匯入；v0.1b 再補 App 內 native video capture plugin。v0.1 不把完整錄影 UI 當 blocker。
 - Upload 決策：採 offset-based chunk upload A-light，避免整支 MP4 經 JS bridge/base64；支援前景上傳、進度條、App 回前景後 resume，不承諾 app 被 kill 或長時間背景仍持續上傳。
 - APP-A1 spec 已建立：`docs/superpowers/specs/2026-06-29-my3dgsapp-capture-companion-design.md`。下一步等待 review，核准後進 APP-A2/API 或 APP-A3/Capacitor skeleton。
+- APP-A3 plan 已建立並提交：`docs/superpowers/plans/2026-06-29-my3dgsapp-capacitor-shell.md`。
+- APP-A3 skeleton 已建立：`my3dgsapp/` 使用 Capacitor 8.4.1 + Vite 8.1.0 + TypeScript 6.0.3；包含 pages、services interfaces、models、Easymap/Cesium placeholder、placement model、viewer link helpers、Android/iOS native project。
+- APP-A3 verification：`npm install` 無 vulnerability；`npm run build` 通過；`npx cap add android`、`npx cap add ios`、`npx cap sync` 通過。TS6 CSS side-effect import 需 `src/vite-env.d.ts`，已補。
