@@ -32,3 +32,5 @@
 - Android deploy 決策：新增 `run_android.bat`，固定使用 `C:\Program Files\Java\jdk-22` 與 `D:\Android\sdk`，自動偵測第一台 authorized Android device 或接受 serial 參數。
 - Android deploy 踩雷：全域 `JAVA_HOME` 指到 JDK 8，Gradle 會失敗；JDK 17 也不足，Capacitor Android 目前需要 source release 21，需使用 JDK 21+。本機以 JDK 22 成功。
 - Android deploy verification：`cmd /c run_android.bat 10AD7E32MH00169` 已成功 build、sync、deploy `app-debug.apk` 到手機 `10AD7E32MH00169`。
+- APP-A4 方向確認：手機錄影導引以「工地/施工範圍掃描」為主，不用單一桌上模型當範例；中文 UI，亮色工程工具感，導引沿施工區邊線、補拍高低角度、陰影遮蔽與畫面重疊。
+- APP-A4 spec 已建立：`docs/superpowers/specs/2026-06-29-my3dgsapp-construction-capture-guidance-design.md`；v0.1 先用 WebView `getUserMedia` + `MediaRecorder` 做 App 內錄影與中文 HUD，保留 `匯入 MP4` 備援，不做真 AI 覆蓋率或 native CameraX。
