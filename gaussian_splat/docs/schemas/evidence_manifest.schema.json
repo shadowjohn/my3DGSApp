@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://3wa.tw/schemas/photogrammetry-studio/evidence_manifest.schema.json",
+  "title": "Photogrammetry Studio Evidence Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["version", "job_id", "coordinate_system", "assets", "capabilities"],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coordinate_system": {
+      "type": "object",
+      "required": ["base"],
+      "additionalProperties": true,
+      "properties": {
+        "base": {
+          "type": "string",
+          "const": "colmap_world"
+        },
+        "viewer_transform": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": true
+            }
+          ]
+        }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cameras": {
+          "type": "string"
+        },
+        "points3d_tracks": {
+          "type": "string"
+        },
+        "sparse_points_preview": {
+          "type": "string"
+        },
+        "coverage_summary": {
+          "type": "string"
+        },
+        "geometry_summary": {
+          "type": "string"
+        },
+        "appearance_summary": {
+          "type": "string"
+        },
+        "evidence_index": {
+          "type": "string"
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "camera_cones": {
+          "type": "boolean"
+        },
+        "coverage_summary": {
+          "type": "boolean"
+        },
+        "click_evidence_query": {
+          "type": "boolean"
+        },
+        "cross_engine_validation": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

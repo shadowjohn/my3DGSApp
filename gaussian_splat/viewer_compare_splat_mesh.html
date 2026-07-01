@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gaussian Splat / Mesh GLB 比對檢視</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #090d12;
+      color: #edf4fb;
+      font-family: Arial, "Noto Sans TC", sans-serif;
+    }
+
+    body {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 14px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .16);
+      background: #111821;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    #paths {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      justify-content: flex-end;
+      min-width: 0;
+      color: #c6d4df;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    #paths code {
+      color: #c9f0ff;
+      font-family: Consolas, Monaco, monospace;
+      overflow-wrap: anywhere;
+    }
+
+    #paths .full {
+      flex-basis: 100%;
+    }
+
+    #evidence-panel {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) 180px;
+      gap: 10px;
+      align-items: center;
+      min-height: 38px;
+      padding: 7px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .12);
+      background: #0b1119;
+      color: #c6d4df;
+      font-size: 12px;
+    }
+
+    #evidence-panel code {
+      color: #c9f0ff;
+      overflow-wrap: anywhere;
+    }
+
+    #evidence-panel .full {
+      grid-column: 1 / -1;
+    }
+
+    #camera-path-svg,
+    #sparse-points-svg {
+      width: 180px;
+      height: 38px;
+    }
+
+    #view-toggle {
+      display: inline-flex;
+      gap: 0;
+      overflow: hidden;
+      border: 1px solid rgba(143, 216, 255, .32);
+      border-radius: 6px;
+      background: #0d131b;
+    }
+
+    #view-toggle button {
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 0;
+      border-right: 1px solid rgba(143, 216, 255, .22);
+      background: transparent;
+      color: #c6d4df;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    #view-toggle button:last-child {
+      border-right: 0;
+    }
+
+    #view-toggle button[aria-pressed="true"] {
+      background: #1b3a52;
+      color: #f4fbff;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    body[data-view="splat"] main,
+    body[data-view="mesh"] main {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    body[data-view="splat"] [data-pane="mesh"],
+    body[data-view="mesh"] [data-pane="splat"] {
+      display: none;
+    }
+
+    .pane {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid rgba(255, 255, 255, .14);
+    }
+
+    .pane:last-child {
+      border-right: 0;
+    }
+
+    .pane-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 34px;
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .12);
+      background: #0d131b;
+      color: #e5edf5;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .pane-label a {
+      color: #8fd8ff;
+      font-size: 12px;
+      font-weight: 400;
+      text-decoration: none;
+    }
+
+    .pane-label a:hover {
+      text-decoration: underline;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border: 0;
+      background: #080b10;
+    }
+
+    @media (max-width: 820px) {
+      body {
+        overflow: auto;
+        height: auto;
+      }
+
+      header {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      #evidence-panel {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      #paths {
+        justify-content: flex-start;
+      }
+
+      main {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: 70vh 70vh;
+      }
+
+      .pane {
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, .16);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Static contract: viewer_mesh.html?src=uploads/7/compare/mesh/cleaned_mesh.glb -->
+  <header>
+    <h1>Gaussian Splat / Mesh GLB 比對檢視</h1>
+    <div id="view-toggle" role="group" aria-label="比對檢視模式">
+      <button type="button" data-view-mode="both" aria-pressed="true">並排</button>
+      <button type="button" data-view-mode="splat" aria-pressed="false">Splat</button>
+      <button type="button" data-view-mode="mesh" aria-pressed="false">Mesh</button>
+    </div>
+    <div id="paths">
+      <span>Gaussian Splat: <code id="splat-path">uploads/7/exports/splat.clean.ply</code></span>
+      <span>Mesh GLB: <code id="mesh-path">uploads/7/compare/mesh/cleaned_mesh.glb</code></span>
+      <span>交付清單 Manifest: <code id="manifest-summary">舊格式 fallback legacy fallback</code></span>
+      <span class="full">軌道 Tracks: <code id="track-summary">舊格式 fallback legacy fallback</code></span>
+    </div>
+  </header>
+  <section id="evidence-panel" aria-label="相機證據 Camera evidence">
+    <label><input id="camera-layer-toggle" type="checkbox" checked> 相機圖層 Camera layer</label>
+    <label><input id="sparse-points-toggle" type="checkbox"> 稀疏點 Sparse points</label>
+    <span>證據 Evidence: <code id="evidence-summary">相機證據尚無資料 Camera evidence not available</code></span>
+    <svg id="camera-path-svg" viewBox="0 0 180 38" role="img" aria-label="相機路徑 Camera path"></svg>
+    <span class="full">稀疏點 Sparse: <code id="sparse-points-summary">稀疏點尚無資料 Sparse points not available</code></span>
+    <svg class="full" id="sparse-points-svg" viewBox="0 0 180 38" role="img" aria-label="稀疏點 LOD Sparse points LOD"></svg>
+    <span class="full">選取 Pick: <code id="evidence-pick-summary">目前以 Mesh 點選位置查詢證據 Evidence pick currently uses mesh/raycast position</code></span>
+  </section>
+  <main>
+    <section class="pane" data-pane="splat" aria-label="Gaussian Splat pane">
+      <div class="pane-label">
+        <span>Gaussian Splat</span>
+        <a id="splat-link" href="viewer_splat.php" target="_blank" rel="noopener">開啟</a>
+      </div>
+      <iframe id="splat-frame" title="Gaussian Splat 檢視" src="viewer_splat.php" sandbox="allow-scripts allow-same-origin"></iframe>
+    </section>
+    <section class="pane" data-pane="mesh" aria-label="Mesh GLB pane">
+      <div class="pane-label">
+        <span>Mesh GLB</span>
+        <a id="mesh-link" href="viewer_mesh.html" target="_blank" rel="noopener">開啟</a>
+      </div>
+      <iframe id="mesh-frame" title="Mesh GLB 檢視" src="viewer_mesh.html" sandbox="allow-scripts allow-same-origin"></iframe>
+    </section>
+  </main>
+  <script>
+    const DEFAULT_JOB = "7";
+    const SPLAT_VIEWER = "viewer_splat.php";
+    const MESH_VIEWER = "viewer_mesh.html";
+    const SPARSE_POINT_RENDER_CAP = 5000;
+    const DEFAULT_SPLAT_PARAMS = {
+      rx: "0",
+      ry: "0",
+      rz: "0",
+      up: "view",
+      distance: "12",
+      alpha: "40",
+      splatScale: "0.35"
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const job = params.get("job") || DEFAULT_JOB;
+    const requestedManifest = params.get("manifest");
+    const requestedStudioJobId = params.get("studio_job_id");
+    const requestedEvidence = params.get("evidence");
+    const defaultSplat = `uploads/${job}/exports/splat.clean.ply`;
+    const defaultMesh = `uploads/${job}/compare/mesh/cleaned_mesh.glb`;
+    const legacyJobManifestPath = params.has("job") ? `uploads/${job}/delivery_manifest.json` : "";
+    const viewModes = ["both", "splat", "mesh"];
+    const initialView = viewModes.includes(params.get("view")) ? params.get("view") : "both";
+    let currentSpatialIndexPath = "";
+    let currentLodSparsePointsPath = "";
+    let spatialIndexCache = null;
+    let spatialIndexPromise = null;
+    let sparsePointsCache = null;
+    let sparsePointsPromise = null;
+    let currentSparsePointRows = [];
+    let currentHighlightIds = new Set();
+
+    function buildUrl(base, values) {
+      const query = new URLSearchParams(values);
+      return `${base}?${query.toString()}`;
+    }
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[ch]));
+    }
+
+    function pathWithoutQuery(path) {
+      return path ? path.split(/[?#]/, 1)[0] : "";
+    }
+
+    function resolveManifestArtifactPath(manifestPath, artifactPath) {
+      if (!artifactPath || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(artifactPath)) return artifactPath || "";
+      const basePath = pathWithoutQuery(manifestPath).replace(/[^/]*$/, "");
+      return `${basePath}${artifactPath}`;
+    }
+
+    function resolveStudioPath(path) {
+      if (!path || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(path)) return path || "";
+      return `../${path.replace(/^\/+/, "")}`;
+    }
+
+    async function manifestPathFromStudioJob(studioJobId) {
+      const response = await fetch(`../studio/api.php?mode=job_detail&id=${encodeURIComponent(studioJobId)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Studio job API unavailable: ${studioJobId}`);
+      const data = await response.json();
+      if (data.status !== "OK") throw new Error(data.reason || `Studio job not found: ${studioJobId}`);
+      const manifestPath = data.job?.delivery_manifest_path || data.delivery_manifest_path || "";
+      if (!manifestPath) throw new Error(`Studio job has no delivery_manifest_path: ${studioJobId}`);
+      return resolveStudioPath(manifestPath);
+    }
+
+    async function manifestPathFromEntrypoint() {
+      if (requestedManifest) return requestedManifest;
+      if (requestedStudioJobId) return manifestPathFromStudioJob(requestedStudioJobId);
+      return legacyJobManifestPath;
+    }
+
+    function legacyArtifactResult(manifest, type, manifestPath, warning) {
+      const artifacts = Array.isArray(manifest?.artifacts) ? manifest.artifacts : [];
+      const artifact = artifacts.find((item) => item?.type === type && item?.role === "primary")
+        || artifacts.find((item) => item?.type === type);
+      const path = resolveManifestArtifactPath(manifestPath, typeof artifact?.path === "string" ? artifact.path : "");
+      return path ? { path, warning: `legacy fallback: ${warning}` } : null;
+    }
+
+    function manifestArtifactResult(manifest, type, manifestPath = "") {
+      const tracks = Array.isArray(manifest?.delivery_tracks) ? manifest.delivery_tracks : [];
+      if (!tracks.length) {
+        return legacyArtifactResult(manifest, type, manifestPath, "delivery_tracks missing") || { path: "", error: "delivery_tracks missing" };
+      }
+      const track = tracks.find((item) => item?.track === type)
+        || tracks.find((item) => item?.primary_artifact?.type === type)
+        || (type === "mesh" ? tracks.find((item) => item?.primary_artifact?.type === "glb") : null);
+      if (!track) {
+        const error = type === "splat" ? "splat track missing" : "mesh track missing";
+        return legacyArtifactResult(manifest, type, manifestPath, error) || { path: "", error };
+      }
+      if (!track.primary_artifact?.path) {
+        const error = type === "splat" ? "primary_artifact missing for splat track" : "primary_artifact missing for mesh track";
+        return legacyArtifactResult(manifest, type, manifestPath, error) || { path: "", error };
+      }
+      return { path: resolveManifestArtifactPath(manifestPath, track.primary_artifact.path), warning: "" };
+    }
+
+    function artifactPathFromManifest(manifest, type, manifestPath = "") {
+      return manifestArtifactResult(manifest, type, manifestPath).path || "";
+    }
+
+    function manifestSummaryText(manifest) {
+      if (!manifest) return "legacy fallback";
+      return `schema_version=${manifest.schema_version || manifest.version || "unknown"} mode=${manifest.mode || "unknown"} studio_job_id=${manifest.studio_job_id ?? "unknown"} generated_at=${manifest.generated_at || "unknown"}`;
+    }
+
+    function manifestTrackSummaries(manifest, manifestPath = "", statuses = {}) {
+      const tracks = Array.isArray(manifest?.delivery_tracks) ? manifest.delivery_tracks : [];
+      if (!tracks.length) return ["legacy fallback: delivery_tracks missing"];
+      return tracks.map((track) => {
+        const artifact = track?.primary_artifact || {};
+        const artifactPath = resolveManifestArtifactPath(manifestPath, typeof artifact.path === "string" ? artifact.path : "");
+        const status = artifactPath ? (statuses[artifactPath] || "unchecked") : "missing";
+        const deliveryCapable = track?.delivery_capable === true ? "delivery_capable=true" : "delivery_capable=false";
+        return `${track?.track || "unknown"}/${track?.engine || "unknown"} role=${track?.role || "unknown"} ${deliveryCapable} artifact=${artifactPath || "missing"} status=${status}`;
+      });
+    }
+
+    function evidenceManifestPath(manifest, manifestPath = "") {
+      const path = manifest?.evidence_manifest_path || manifest?.evidence_manifest || manifest?.evidence?.manifest_path || manifest?.evidence?.path || "";
+      return resolveManifestArtifactPath(manifestPath, path);
+    }
+
+    function cameraEvidenceAssetPath(evidenceManifest, evidencePath = "") {
+      const path = evidenceManifest?.assets?.cameras || evidenceManifest?.cameras || "";
+      return resolveManifestArtifactPath(evidencePath, path);
+    }
+
+    function spatialIndexPath(evidenceManifest, evidencePath = "") {
+      const path = evidenceManifest?.spatial_index_path || evidenceManifest?.assets?.spatial_index || evidenceManifest?.assets?.evidence_index || "";
+      return resolveManifestArtifactPath(evidencePath, path);
+    }
+
+    function lodSparsePointsPath(evidenceManifest, evidencePath = "") {
+      const path = evidenceManifest?.lod_sparse_points_path || evidenceManifest?.assets?.lod_sparse_points || "";
+      return resolveManifestArtifactPath(evidencePath, path);
+    }
+
+    function finiteVector3(value) {
+      return Array.isArray(value) && value.length >= 3 && value.slice(0, 3).every(Number.isFinite)
+        ? value.slice(0, 3)
+        : null;
+    }
+
+    function cameraPathPoints(camerasData) {
+      const cameras = Array.isArray(camerasData?.cameras) ? camerasData.cameras : [];
+      return cameras.map((camera, index) => {
+        // ponytail: raw tvec fallback; export camera centers later if COLMAP center math matters here.
+        const vector = finiteVector3(camera.position) || finiteVector3(camera.center) || finiteVector3(camera.tvec);
+        return vector ? { name: camera.name || `camera_${index + 1}`, x: vector[0], y: vector[1], z: vector[2] } : null;
+      }).filter(Boolean);
+    }
+
+    function cameraEvidenceSummary(camerasData, indexPath = "") {
+      const count = cameraPathPoints(camerasData).length;
+      const indexText = indexPath ? "spatial index ready" : "spatial index not available";
+      return count ? `${count} cameras; ${indexText}` : `Camera evidence not available; ${indexText}`;
+    }
+
+    function gridIndex(value, lo, hi, size) {
+      if (hi === lo) return 0;
+      return Math.min(size - 1, Math.max(0, Math.floor((value - lo) / (hi - lo) * size)));
+    }
+
+    function gridTileIdForPosition(index, position) {
+      const grid = index?.grid || {};
+      const size = Number(grid.size) || 1;
+      const ix = gridIndex(Number(position[0]), Number(grid.min_x || 0), Number(grid.max_x || 0), size);
+      const iz = gridIndex(Number(position[2]), Number(grid.min_z || 0), Number(grid.max_z || 0), size);
+      return `${ix}_${iz}`;
+    }
+
+    function evidenceTileForPosition(index, position) {
+      const tileId = gridTileIdForPosition(index, position);
+      return (index?.tiles || []).find((tile) => tile?.tile_id === tileId) || null;
+    }
+
+    function formatPosition(position) {
+      return `[${position.slice(0, 3).map((value) => Number(value).toFixed(2)).join(",")}]`;
+    }
+
+    function evidencePickSummary(position, tile) {
+      const picked = `picked=${formatPosition(position)}`;
+      if (!tile) return `${picked} no evidence for picked area`;
+      const sampleIds = (tile.sample_sparse_points || []).map((point) => point.point3d_id).filter((id) => id !== undefined).join(",");
+      return `${picked} tile=${tile.tile_id || "unknown"} bbox=[${(tile.bbox || []).join(",")}] coverage_score=${tile.coverage_score ?? "unknown"} point_count=${tile.point_count ?? 0} visible_camera_ids=${(tile.visible_camera_ids || []).join(",")} sample_sparse_points=${sampleIds || "none"}`;
+    }
+
+    function sparsePointRows(data, cap = SPARSE_POINT_RENDER_CAP) {
+      return (Array.isArray(data?.points) ? data.points : [])
+        .map((point) => {
+          const xyz = finiteVector3(point.xyz);
+          return xyz ? { point3d_id: point.point3d_id, x: xyz[0], y: xyz[1], z: xyz[2], rgb: point.rgb || [] } : null;
+        })
+        .filter(Boolean)
+        .slice(0, cap);
+    }
+
+    function sparsePointSummary(data, rows) {
+      if (!data) return "Sparse points not available";
+      const total = Number(data.point_count ?? data.points?.length ?? rows.length) || 0;
+      return `sparse points: total=${total} rendered=${rows.length}${rows.length < total ? " capped" : ""}`;
+    }
+
+    function sparsePointColor(point) {
+      const rgb = Array.isArray(point.rgb) ? point.rgb.slice(0, 3).map((value) => Math.max(0, Math.min(255, Number(value) || 0))) : [180, 220, 255];
+      return `rgb(${rgb.join(",")})`;
+    }
+
+    function sparsePointsSvg(rows, highlightIds = new Set()) {
+      if (!rows.length) return "";
+      const width = 180;
+      const height = 38;
+      const pad = 5;
+      const xs = rows.map((point) => point.x);
+      const zs = rows.map((point) => point.z);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minZ = Math.min(...zs);
+      const maxZ = Math.max(...zs);
+      const project = (point) => {
+        const x = pad + (maxX === minX ? .5 : (point.x - minX) / (maxX - minX)) * (width - pad * 2);
+        const y = pad + (maxZ === minZ ? .5 : (point.z - minZ) / (maxZ - minZ)) * (height - pad * 2);
+        return [x.toFixed(1), y.toFixed(1)];
+      };
+      return rows.map((point) => {
+        const [x, y] = project(point);
+        const highlighted = highlightIds.has(point.point3d_id);
+        return `<circle data-point-id="${esc(point.point3d_id)}" cx="${x}" cy="${y}" r="${highlighted ? 2.6 : 1.6}" fill="${sparsePointColor(point)}" stroke="${highlighted ? "#ffdf6e" : "transparent"}" stroke-width="1.4"/>`;
+      }).join("");
+    }
+
+    function evidenceQueryUrl(studioJobId, position) {
+      return `../studio/api.php?mode=evidence_query&id=${encodeURIComponent(studioJobId)}&x=${encodeURIComponent(position[0])}&y=${encodeURIComponent(position[1])}&z=${encodeURIComponent(position[2])}`;
+    }
+
+    function renderEvidencePick(message) {
+      const node = document.getElementById("evidence-pick-summary");
+      if (node) node.textContent = message;
+    }
+
+    function cameraPathSvg(points) {
+      if (!points.length) return "";
+      const width = 180;
+      const height = 38;
+      const pad = 5;
+      const xs = points.map((point) => point.x);
+      const zs = points.map((point) => point.z);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minZ = Math.min(...zs);
+      const maxZ = Math.max(...zs);
+      const project = (point) => {
+        const x = pad + (maxX === minX ? .5 : (point.x - minX) / (maxX - minX)) * (width - pad * 2);
+        const y = pad + (maxZ === minZ ? .5 : (point.z - minZ) / (maxZ - minZ)) * (height - pad * 2);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      };
+      const line = points.length > 1 ? `<polyline points="${points.map(project).join(" ")}" fill="none" stroke="#8fd8ff" stroke-width="1.5"/>` : "";
+      const dots = points.map((point) => `<circle cx="${project(point).split(",")[0]}" cy="${project(point).split(",")[1]}" r="2" fill="#e5edf5"><title>${esc(point.name)}</title></circle>`).join("");
+      return `${line}${dots}`;
+    }
+
+    async function loadCameraEvidence(manifest, manifestPath = "") {
+      const evidencePath = requestedEvidence || evidenceManifestPath(manifest, manifestPath);
+      if (!evidencePath) return { error: "Camera evidence not available" };
+      try {
+        const evidenceResponse = await fetch(evidencePath, { cache: "no-store" });
+        if (!evidenceResponse.ok) return { error: `Camera evidence not available: ${evidencePath}` };
+        const evidenceManifest = await evidenceResponse.json();
+        const camerasPath = cameraEvidenceAssetPath(evidenceManifest, evidencePath);
+        const indexPath = spatialIndexPath(evidenceManifest, evidencePath);
+        const lodPath = lodSparsePointsPath(evidenceManifest, evidencePath);
+        if (!camerasPath) return { error: "Camera evidence not available", indexPath, lodPath };
+        const camerasResponse = await fetch(camerasPath, { cache: "no-store" });
+        if (!camerasResponse.ok) return { error: `Camera evidence not available: ${camerasPath}`, indexPath, lodPath };
+        return { cameras: await camerasResponse.json(), camerasPath, indexPath, lodPath };
+      } catch (error) {
+        console.warn("Camera evidence unavailable", error);
+        return { error: "Camera evidence not available" };
+      }
+    }
+
+    function renderCameraEvidence(camerasData, error = "", indexPath = "") {
+      const summary = document.getElementById("evidence-summary");
+      const svg = document.getElementById("camera-path-svg");
+      const points = cameraPathPoints(camerasData);
+      if (summary) summary.textContent = error || cameraEvidenceSummary(camerasData, indexPath);
+      if (svg) svg.innerHTML = error ? "" : cameraPathSvg(points);
+    }
+
+    async function loadSparsePoints() {
+      if (!currentLodSparsePointsPath) return null;
+      if (sparsePointsCache) return sparsePointsCache;
+      if (!sparsePointsPromise) {
+        sparsePointsPromise = fetch(currentLodSparsePointsPath, { cache: "no-store" })
+          .then((response) => response.ok ? response.json() : null)
+          .catch(() => null);
+      }
+      sparsePointsCache = await sparsePointsPromise;
+      return sparsePointsCache;
+    }
+
+    async function renderSparsePoints() {
+      const summary = document.getElementById("sparse-points-summary");
+      const svg = document.getElementById("sparse-points-svg");
+      const data = await loadSparsePoints();
+      currentSparsePointRows = sparsePointRows(data);
+      if (summary) summary.textContent = sparsePointSummary(data, currentSparsePointRows);
+      if (svg) svg.innerHTML = data ? sparsePointsSvg(currentSparsePointRows, currentHighlightIds) : "";
+    }
+
+    async function loadSpatialIndex() {
+      if (!currentSpatialIndexPath) return null;
+      if (spatialIndexCache) return spatialIndexCache;
+      if (!spatialIndexPromise) {
+        spatialIndexPromise = fetch(currentSpatialIndexPath, { cache: "no-store" })
+          .then((response) => response.ok ? response.json() : null)
+          .catch(() => null);
+      }
+      spatialIndexCache = await spatialIndexPromise;
+      return spatialIndexCache;
+    }
+
+    async function queryEvidenceTile(position) {
+      if (requestedStudioJobId) {
+        try {
+          const response = await fetch(evidenceQueryUrl(requestedStudioJobId, position), { cache: "no-store" });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.status === "OK") return data.tile || null;
+          }
+        } catch (error) {
+          console.warn("Evidence query API unavailable", error);
+        }
+      }
+      const index = await loadSpatialIndex();
+      return index ? evidenceTileForPosition(index, position) : undefined;
+    }
+
+    async function handleEvidencePick(position) {
+      if (!Array.isArray(position) || position.length < 3) return;
+      const tile = await queryEvidenceTile(position);
+      if (tile === undefined) {
+        renderEvidencePick("spatial index not available");
+        return;
+      }
+      currentHighlightIds = new Set((tile?.sample_sparse_points || []).map((point) => point.point3d_id));
+      if (currentSparsePointRows.length) {
+        const svg = document.getElementById("sparse-points-svg");
+        if (svg) svg.innerHTML = sparsePointsSvg(currentSparsePointRows, currentHighlightIds);
+      }
+      renderEvidencePick(evidencePickSummary(position, tile));
+    }
+
+    async function artifactHeadStatus(path) {
+      if (!path) return "missing";
+      try {
+        const response = await fetch(path, { method: "HEAD", cache: "no-store" });
+        return response.ok ? "ok" : `missing (${response.status})`;
+      } catch (error) {
+        return "missing";
+      }
+    }
+
+    async function artifactStatuses(paths) {
+      const uniquePaths = [...new Set(paths.filter(Boolean))];
+      const entries = await Promise.all(uniquePaths.map(async (path) => [path, await artifactHeadStatus(path)]));
+      return Object.fromEntries(entries);
+    }
+
+    function artifactFailureMessage(statuses) {
+      const failed = Object.entries(statuses).find((entry) => entry[1] !== "ok");
+      return failed ? `Artifact not found: ${failed[0]} (${failed[1]})` : "";
+    }
+
+    function setManifestSurface(manifest, manifestPath, statuses = {}, note = "") {
+      document.getElementById("manifest-summary").textContent = manifest ? manifestSummaryText(manifest) : (note || "legacy fallback");
+      document.getElementById("track-summary").textContent = manifest ? manifestTrackSummaries(manifest, manifestPath, statuses).join(" | ") : (note || "legacy fallback");
+    }
+
+    async function loadManifest() {
+      const manifestPath = await manifestPathFromEntrypoint();
+      if (!manifestPath) return { manifest: null, manifestPath: "" };
+      try {
+        const response = await fetch(manifestPath, { cache: "no-store" });
+        if (!response.ok) return { manifest: null, manifestPath, error: `Delivery manifest not found: ${manifestPath}` };
+        return { manifest: await response.json(), manifestPath };
+      } catch (error) {
+        console.warn("Delivery manifest unavailable", error);
+        return { manifest: null, manifestPath, error: `Delivery manifest not found: ${manifestPath}` };
+      }
+    }
+
+    function showManifestError(message) {
+      document.querySelector("h1").textContent = message;
+      document.getElementById("splat-path").textContent = message;
+      document.getElementById("mesh-path").textContent = message;
+      document.getElementById("manifest-summary").textContent = message;
+      document.getElementById("track-summary").textContent = message;
+    }
+
+    function applyViewMode(mode, updateUrl = true) {
+      const nextMode = viewModes.includes(mode) ? mode : "both";
+      document.body.dataset.view = nextMode;
+      document.querySelectorAll("[data-view-mode]").forEach((button) => {
+        button.setAttribute("aria-pressed", button.dataset.viewMode === nextMode ? "true" : "false");
+      });
+      if (!updateUrl || !window.history?.replaceState) return;
+      if (nextMode === "both") {
+        params.delete("view");
+      } else {
+        params.set("view", nextMode);
+      }
+      const query = params.toString();
+      window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+    }
+
+    async function main() {
+      const loaded = await loadManifest();
+      if (loaded.error) {
+        showManifestError(loaded.error);
+        return;
+      }
+      const manifest = loaded.manifest;
+      const manifestPath = loaded.manifestPath;
+      const splatResult = manifest ? manifestArtifactResult(manifest, "splat", manifestPath) : null;
+      const meshResult = manifest ? manifestArtifactResult(manifest, "mesh", manifestPath) : null;
+      if (!params.get("splat") && splatResult?.error) return showManifestError(splatResult.error);
+      if (!params.get("mesh") && meshResult?.error) return showManifestError(meshResult.error);
+      const splat = params.get("splat") || splatResult?.path || defaultSplat;
+      const mesh = params.get("mesh") || meshResult?.path || defaultMesh;
+      const warning = splatResult?.warning || meshResult?.warning || "";
+      const statuses = manifest ? await artifactStatuses([splat, mesh]) : {};
+      setManifestSurface(manifest, manifestPath, statuses, warning);
+      const evidence = await loadCameraEvidence(manifest, manifestPath);
+      currentSpatialIndexPath = evidence.indexPath || "";
+      currentLodSparsePointsPath = evidence.lodPath || "";
+      renderCameraEvidence(evidence.cameras, evidence.error || "", evidence.indexPath || "");
+      const artifactError = manifest ? artifactFailureMessage(statuses) : "";
+      if (artifactError) return showManifestError(artifactError);
+      const splatUrl = buildUrl(SPLAT_VIEWER, {
+        src: splat,
+        ...DEFAULT_SPLAT_PARAMS
+      });
+      const meshUrl = buildUrl(MESH_VIEWER, {
+        src: mesh
+      });
+
+      document.getElementById("splat-path").textContent = warning ? `${splat} (${warning})` : splat;
+      document.getElementById("mesh-path").textContent = warning ? `${mesh} (${warning})` : mesh;
+      document.getElementById("splat-frame").src = splatUrl;
+      document.getElementById("mesh-frame").src = meshUrl;
+      document.getElementById("splat-link").href = splatUrl;
+      document.getElementById("mesh-link").href = meshUrl;
+    }
+
+    document.querySelectorAll("[data-view-mode]").forEach((button) => {
+      button.addEventListener("click", () => applyViewMode(button.dataset.viewMode));
+    });
+    const cameraLayerToggle = document.getElementById("camera-layer-toggle");
+    if (cameraLayerToggle?.addEventListener) {
+      cameraLayerToggle.addEventListener("change", () => {
+        const svg = document.getElementById("camera-path-svg");
+        if (svg?.style) svg.style.display = cameraLayerToggle.checked ? "" : "none";
+      });
+    }
+    const sparsePointsToggle = document.getElementById("sparse-points-toggle");
+    if (sparsePointsToggle?.addEventListener) {
+      sparsePointsToggle.addEventListener("change", () => {
+        const svg = document.getElementById("sparse-points-svg");
+        if (svg?.style) svg.style.display = sparsePointsToggle.checked ? "" : "none";
+        if (sparsePointsToggle.checked) renderSparsePoints();
+      });
+      const svg = document.getElementById("sparse-points-svg");
+      if (svg?.style) svg.style.display = "none";
+    }
+    window.addEventListener?.("message", (event) => {
+      if (event?.data?.type !== "mesh-viewer-pick") return;
+      handleEvidencePick(event.data.position);
+    });
+    applyViewMode(initialView, false);
+    main();
+  </script>
+</body>
+</html>

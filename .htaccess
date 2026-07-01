@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# 封鎖版本庫、隱藏檔、內部工具目錄與開發文件，避免被 HTTP 直接讀取。
+RewriteRule (^|.*/)\.(?!well-known(?:/|$)) - [F,L,NC]
+RewriteRule (^|.*/)(\.agents|\.codex|docs|tests|scripts|crontab|requirements|inc)(/|$) - [F,L,NC]
+RewriteRule (^|.*/)(README|history|todo|task|plan|pytest|composer|package|pnpm-lock|yarn\.lock|web\.config)(\..*)?$ - [F,L,NC]
+RewriteRule (^|.*\.)(bak|backup|old|orig|save|swp|swo|tmp|temp|log|ini|env|sql|sqlite|db|conf|config|json|csv|md|map|ya?ml|lock|key|pem|crt|cer|csr|sh|py|7z|zip|rar|tar|gz|tgz|pt|pth|onnx|engine|ckpt|safetensors)(\..*)?$ - [F,L,NC]

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://3wa.tw/schemas/photogrammetry-studio/validation_report.schema.json",
+  "title": "Photogrammetry Studio Validation Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["version", "job_id", "scores", "decision"],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capture": {
+          "$ref": "#/$defs/score"
+        },
+        "geometry": {
+          "$ref": "#/$defs/score"
+        },
+        "appearance": {
+          "$ref": "#/$defs/score"
+        },
+        "cross_validation": {
+          "$ref": "#/$defs/score"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["grade", "status", "summary"],
+      "additionalProperties": true,
+      "properties": {
+        "grade": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["deliverable", "review_needed", "recapture_recommended", "engine_failed"]
+        },
+        "root_cause": {
+          "type": "string",
+          "enum": ["capture", "engine", "texture", "viewer", "unknown"]
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence_regions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence_region"
+      }
+    }
+  },
+  "$defs": {
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "evidence_region": {
+      "type": "object",
+      "required": ["region_id", "labels", "diagnosis"],
+      "additionalProperties": true,
+      "properties": {
+        "region_id": {
+          "type": "string"
+        },
+        "center": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "diagnosis": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

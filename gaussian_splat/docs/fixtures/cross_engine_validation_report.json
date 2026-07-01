@@ -1,0 +1,42 @@
+{
+  "version": "1.0.3",
+  "job_id": "example_premium_001",
+  "scores": {
+    "capture": 58,
+    "geometry": 46,
+    "appearance": 88,
+    "cross_validation": 64
+  },
+  "decision": {
+    "grade": "C+",
+    "status": "review_needed",
+    "root_cause": "capture",
+    "summary": "Geometry confidence is lower than appearance confidence. Sparse coverage is weak, so the splat may look acceptable while mesh quality remains risky."
+  },
+  "evidence_regions": [
+    {
+      "region_id": "region_00012",
+      "center": [
+        0.52,
+        1.88,
+        0.74
+      ],
+      "radius": 0.25,
+      "labels": [
+        "geometry_low",
+        "appearance_high",
+        "coverage_low"
+      ],
+      "metrics": {
+        "visible_camera_count": 3,
+        "angle_variance_deg": 21.5,
+        "avg_reprojection_error": 1.28,
+        "nearby_sparse_points": 14,
+        "geometry_density": "low",
+        "appearance_density": "medium"
+      },
+      "diagnosis": "Low camera coverage and narrow baseline. 3DGS may look acceptable from training views, but mesh quality is risky.",
+      "recommendation": "補拍右側與上方俯角，增加 baseline 與遮擋區觀測。"
+    }
+  ]
+}

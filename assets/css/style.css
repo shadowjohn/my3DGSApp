@@ -1,0 +1,67 @@
+﻿.cursorpointer {
+    cursor: pointer;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.positionabsolute {
+    position: absolute;
+}
+
+.positionrelative {
+    position: relative;
+}
+
+.red {
+    color: red;
+}
+
+.textcenter {
+    text-align: center;
+}
+
+.textleft {
+    text-align: left;
+}
+
+.textright {
+    text-align: right;
+}
+
+.blue {
+    color: blue;
+}
+
+.orange {
+    color: orange;
+}
+
+.none {
+    display: none;
+}
+
+.width45px {
+    width: 45px;
+}
+
+.bg-black {
+    background-color: black;
+}
+
+.font-green {
+    color: green;
+}
+
+.font-lightgreen {
+    color: lightgreen;
+}
+
+.right0px {
+    right: 0px;
+}
+
+.top0px {
+    top: 0px;
+}

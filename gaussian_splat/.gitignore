@@ -1,0 +1,15 @@
+.pytest_cache/
+.playwright-cli/
+.superpowers/
+__pycache__/
+*.py[cod]
+*.log
+data/
+downloads/
+external/
+output/
+outputs/
+release/
+crontab/*.lock
+uploads/*
+!uploads/.gitkeep

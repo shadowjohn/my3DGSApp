@@ -1,0 +1,17 @@
+AddType application/octet-stream .ply .splat .ksplat .spz
+AddType application/json .json
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(ply|splat|ksplat|spz|json)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+    Header set Content-Disposition "inline"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  SetEnvIfNoCase Request_URI "\.(ply|splat|ksplat|spz)$" no-gzip
+</IfModule>
+
+<IfModule mod_brotli.c>
+  SetEnvIfNoCase Request_URI "\.(ply|splat|ksplat|spz)$" no-brotli
+</IfModule>

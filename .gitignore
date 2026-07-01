@@ -1,0 +1,30 @@
+# Runtime/output
+*.log
+*.lock
+uploads/
+*/uploads/
+release/
+test-results/
+wiki_runs/
+
+# Python/test cache
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Codex/local agent state
+.agents/
+.codex/
+.superpowers/
+
+# Local secrets stay outside repo; this is here for future local drops.
+.env
+*.ppk
+*.pem
+*.key
+*.sql
+*.db
+*.sqlite
+*.bak
+inc/config.php
+db_conn.php

@@ -1,0 +1,61 @@
+{
+  "version": "1.0.3",
+  "job_id": "example_fast_001",
+  "mode": "fast",
+  "status": "completed",
+  "coordinate_system": {
+    "base": "colmap_world",
+    "unit": "unknown",
+    "up_axis": "unknown",
+    "viewer_transform": null,
+    "transforms": {
+      "openmvs_to_colmap": null,
+      "gaussian_to_colmap": null,
+      "viewer_to_colmap": null
+    }
+  },
+  "sources": {
+    "sfm": {
+      "engine": "colmap",
+      "workspace": "artifacts/colmap",
+      "cameras": "artifacts/evidence/cameras.json",
+      "points3d_tracks": "artifacts/evidence/points3d_tracks.jsonl",
+      "summary": "artifacts/evidence/coverage_summary.json"
+    },
+    "geometry": {
+      "engine": "openmvs",
+      "mesh": "artifacts/openmvs/model.glb",
+      "dense_cloud": "artifacts/openmvs/scene_dense.ply",
+      "summary": "artifacts/evidence/geometry_summary.json"
+    }
+  },
+  "artifacts": [
+    {
+      "type": "mesh",
+      "path": "artifacts/openmvs/model.glb",
+      "format": "glb",
+      "engine": "openmvs",
+      "role": "primary"
+    },
+    {
+      "type": "coverage_summary",
+      "path": "artifacts/evidence/coverage_summary.json",
+      "format": "json",
+      "engine": "colmap",
+      "role": "supporting"
+    },
+    {
+      "type": "geometry_summary",
+      "path": "artifacts/evidence/geometry_summary.json",
+      "format": "json",
+      "engine": "openmvs",
+      "role": "supporting"
+    }
+  ],
+  "metrics": {
+    "registeredFrames": 92,
+    "registrationRatio": 0.93,
+    "textureBlackRatio": 0.02
+  },
+  "errors": []
+}

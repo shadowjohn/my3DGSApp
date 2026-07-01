@@ -1,0 +1,9 @@
+uploads/
+crontab/*.lock
+.pytest_cache/
+__pycache__/
+*.pyc
+*.log
+test-results/
+wiki_runs/
+release/

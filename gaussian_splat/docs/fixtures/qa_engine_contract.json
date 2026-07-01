@@ -1,0 +1,64 @@
+{
+  "version": "1.0.3",
+  "job_id": "example_qa_001",
+  "mode": "qa",
+  "status": "review_required",
+  "coordinate_system": {
+    "base": "colmap_world",
+    "unit": "unknown",
+    "up_axis": "unknown",
+    "viewer_transform": null,
+    "transforms": {
+      "openmvs_to_colmap": null,
+      "gaussian_to_colmap": null,
+      "viewer_to_colmap": null
+    }
+  },
+  "sources": {
+    "sfm": {
+      "engine": "colmap",
+      "workspace": "artifacts/colmap",
+      "cameras": "artifacts/evidence/cameras.json",
+      "points3d_tracks": "artifacts/evidence/points3d_tracks.jsonl",
+      "summary": "artifacts/evidence/coverage_summary.json"
+    },
+    "geometry": {
+      "engine": "openmvs",
+      "mesh": "artifacts/openmvs/model.glb",
+      "summary": "artifacts/evidence/geometry_summary.json"
+    },
+    "appearance": {
+      "engine": "gaussian_splat",
+      "splat": "artifacts/gaussian/splat.ply",
+      "summary": "artifacts/evidence/appearance_summary.json"
+    }
+  },
+  "artifacts": [
+    {
+      "type": "mesh",
+      "path": "artifacts/openmvs/model.glb",
+      "format": "glb",
+      "engine": "openmvs",
+      "role": "primary"
+    },
+    {
+      "type": "splat",
+      "path": "artifacts/gaussian/splat.ply",
+      "format": "ply",
+      "engine": "gaussian_splat",
+      "role": "diagnostic"
+    },
+    {
+      "type": "validation_report",
+      "path": "validation/validation_report.json",
+      "format": "json",
+      "role": "supporting"
+    }
+  ],
+  "metrics": {
+    "registeredFrames": 64,
+    "registrationRatio": 0.71,
+    "splatCount": 1250000
+  },
+  "errors": []
+}

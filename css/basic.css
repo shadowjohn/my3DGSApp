@@ -1,0 +1,189 @@
+﻿@charset "utf-8";
+body{line-height: 150%;  /* 150% ~ 200% */}
+a:link , a:visited{
+	text-decoration: none;
+	transition: color 0.5s;transition: all 0.5s;
+}
+a:hover, a:active, a:focus {
+	text-decoration: none;
+	color: #FF6600;
+}
+a.mainLink:link , a.mainLink:visited{
+	text-decoration: none; 
+	transition: color 0.5s;
+	color: #359BFF;
+}
+a.mainLink:hover{
+	text-decoration: none;
+	color:#DC6103;
+}
+/*卷軸樣式  https://developer.mozilla.org/zh-CN/docs/Web/CSS/::-webkit-scrollbar  */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px; 
+    background-color:#efefef;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background-color: #666;
+    border: solid 2px #efefef;
+}
+i{ margin-right:5px;margin-left:3px;}
+img{
+	vertical-align: middle;
+}
+a img {
+	border: none;
+	vertical-align: middle;
+}
+.imgOutline{
+	border: 1px solid #666;
+	padding:5px;
+}
+ul, ol, dl {
+	padding: 0;
+	margin: 0;
+	list-style-type: none;
+}
+ol{
+	list-style-type: decimal;
+	padding-left: 30px;
+}
+p{
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+table{border-spacing:1px;border-collapse: separate;} 
+ input:focus, textarea:focus, select:focus{
+        outline: none;
+    }
+button{ cursor:pointer;} 
+::placeholder{color: #868E96;font-size:0.9em;}
+
+.mainUL{
+	list-style: circle outside;
+	font-weight: bold;
+	margin-left: 50px;
+}
+.mainUL li{
+	font-weight: normal;
+}
+
+/* 字型樣式 */
+.txtArial{font-family: Arial, "微軟正黑體", "新細明體";}
+.txt09em {
+	font-size: 0.9em;
+	line-height: 1.2em;
+}
+.txt10em {
+	font-size: 1em;
+	line-height: 1.2em;
+}
+.txt11embold {
+	font-size: 1.05em;
+	font-weight: bold;
+}
+.txt12em {
+	font-size: 1.2em;
+	line-height: 1.2em;
+}
+.txt13em {
+	font-size: 1.3em;
+	line-height: 1.3em;
+}
+.txt15em {
+	font-size: 1.5em;
+	line-height: 1.8em;
+}
+.txt20em {
+	font-size: 2em; 
+}
+.txt30em {
+	font-size: 3em; 
+}
+.txt50em {
+	font-size: 5em;
+}
+.txtbold{font-weight: bold;}
+
+/* 字型樣式 --------------------到此*/
+
+/* 顏色樣式 -------------------------*/
+.colorRed{color: #d93621;}
+.colorBule{color: rgba(53,155,255,1);}
+.colorOrange{color: #F60;} 
+.colorYellow{color: rgba(251,215,4,1);}
+.colorPurple{color: #b962de;} 
+.colorPink{color: #fa6aa4;} 
+.colorCoffee{color: #482c12;}
+.colorLatte{color: #a88e75;}
+.colorGreen{color:#24B400;}
+.colorGray70{color: #333333;}
+.colorGray50{color: #999999;}
+.colorWhite{color: #fff;}
+
+.colorbg_gray10{background-color: #efefef;}
+.colorbg_white{background-color: #fff;}
+.colorbg_lightblue{background-color: #8bf6ff;}
+.colorbg_yellow{background-color: #ffe300;}
+.colorbg_lightyellow{background-color: rgba(251,215,4,0.3);}
+
+.borderColor_black{border-color:#2B3239; }
+.borderColor_gray{border-color:#d4d4d4; }
+.borderColor_gray50{border-color:#ccc; }
+.borderColor_lightgray{border-color:#efefef; }
+.borderColor_blue{border-color:#359BFF; }
+.borderColor_yellow{border-color:#FBD704; } 
+.borderColor_orange{border-color:#F60; } 
+/* 顏色樣式 --------------------到此*/
+
+/* 線條樣式 -------------------*/
+.linedash_top{border-top-style: dashed;border-top-width: 1px;}
+.linedash_bottom{border-bottom-style: dashed;border-bottom-width: 1px;}
+.linesolid_top{border-top-style: solid;border-top-width: 1px;}
+.linesolid_bottom{border-bottom-style: solid;border-bottom-width: 1px;}
+.solidline{	border-style: solid;border-width: 1px;}
+.dashline{border-style: dashed;border-width: 1px;}
+/* 線條樣式 --------------------到此*/
+
+.linebreak{word-break:break-all;}
+.nobreak{word-break:keep-all;}
+.starRed{position: relative;}
+.starRed::before{content: "*";color:#F54447;position: absolute;top:-6px;left: -6px;}
+.overflow{
+	overflow: auto;
+}
+.clearfloat {
+	clear: both;
+}
+.clearfloat::after{content: "";display: block;clear: both;}
+.centerCenter{display: flex;
+align-items:center;
+ justify-content:center; 
+}
+/* 限制內容字數 */
+.wordLimit{
+overflow:hidden;
+white-space: nowrap;
+text-overflow: ellipsis;
+/*上面三個一定要 寬度自己訂*/ 
+}
+  
+/* 字體漸層 */
+.text_gradient{color: rgba(255,255,255,0.9);display: block;background:linear-gradient(90deg, #0089D4, #14BAF8);
+	-webkit-background-clip:text;
+	-webkit-text-fill-color:transparent;}
+
+.animatag{
+	animation-duration: 300s;
+	animation-iteration-count: infinite;   
+	animation-name: animatrun; 
+}
+
+
+@keyframes animatrun {
+    0% {background-position: 0px bottom;}
+	50% { background-position: -550px bottom;}  
+    100%{background-position: 0px bottom; }
+  }

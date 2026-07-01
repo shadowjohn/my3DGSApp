@@ -1,0 +1,23 @@
+{
+  "version": "1.0.3",
+  "job_id": "example_premium_001",
+  "coordinate_system": {
+    "base": "colmap_world",
+    "viewer_transform": null
+  },
+  "assets": {
+    "cameras": "artifacts/evidence/cameras.json",
+    "points3d_tracks": "artifacts/evidence/points3d_tracks.jsonl",
+    "sparse_points_preview": "artifacts/evidence/sparse_points_preview.ply",
+    "coverage_summary": "artifacts/evidence/coverage_summary.json",
+    "geometry_summary": "artifacts/evidence/geometry_summary.json",
+    "appearance_summary": "artifacts/evidence/appearance_summary.json",
+    "evidence_index": "artifacts/evidence/evidence_index.sqlite"
+  },
+  "capabilities": {
+    "camera_cones": true,
+    "coverage_summary": true,
+    "click_evidence_query": true,
+    "cross_engine_validation": true
+  }
+}

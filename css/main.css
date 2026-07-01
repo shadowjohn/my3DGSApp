@@ -1,0 +1,230 @@
+@charset "utf-8";
+ 
+.form-control.fc-auto , .form-select.fc-auto{display: inline-block;width: auto;}
+ 
+h2.title{
+	padding: 10px 20px;
+	padding-bottom: 0px;
+	margin: 0px;
+	color: #333;
+	font-size:1.5em;
+	font-weight: 600; 
+}
+ 
+.sitemap{ 
+	font-size: 0.85em;
+	color: #333;
+	padding: 10px;
+    border-bottom: solid 1px  rgba(0,0,0,0.05);
+	padding-bottom:5px; 
+	background-color: rgba(255,255,255,0.3);
+}
+
+.sitemap a , .sitemap a:visited{
+	color: #666;
+	text-decoration: none;
+}
+.sitemap a:hover{
+	color: #F60;
+}
+
+  
+
+/*按鈕樣式*/
+.mainbtn , a.mainbtn{
+	border-radius: 15px;
+	font-size: 0.8em;
+	color: #333;
+	line-height: 20px;
+	margin: 5px;
+	padding: 5px 15px;
+	box-sizing: border-box;
+	border-style: none;
+	transition: all 0.5s;
+	font-family: Arial, "微軟正黑體", "新細明體";
+	display: inline-block; 
+}
+.mainbtn:hover{color: #333;}
+.mainbtn:focus{outline: none;}
+.bg_deepgreen{background-color:#178F00;color:#fff;}
+.bg_deepgreen:hover{background-color:#006202;color:#fff;}
+.bg_green{background-color: #3CC;}
+.bg_green:hover{background-color: #2eb7b7;}
+.bg_lightgreen{background-color:#40BF89;}
+.bg_lightgreen:hover{background-color:#45B1A6;}
+.bg_orange{background-color: #F90;}
+.bg_orange:hover{background-color: #eb8d01;}
+.bg_blue{background-color: #0CF;}
+.bg_blue:hover{background-color: #03bae8;}
+.bg_yellow{background-color: #fbe600;}
+.bg_yellow:hover{background-color: #e0ce01;}
+.bg_black , a.bg_black{background-color: #333;color: #FFF;}
+.bg_black:hover{background-color: #2e374b;color: #FF0;}
+.bg_gray{background-color: #CCC;}
+.bg_gray:hover{background-color: #b7b6b6;}
+.bg_lightgray{background-color: #efefef;}
+.bg_lightgray:hover{background-color: #ccc;}
+.bg_red , a.bg_red{background-color: #ff7373;}
+.bg_red:hover , a.bg_red:hover{background-color: #d84f4f;color: #FFF;}
+.bg_lightblue{background-color: #95d9f0;}
+.bg_lightblue:hover{background-color: #89c8dd;} 
+.bg_deepblue{background-color: #174387;color: #fff;}
+.bg_deepblue:hover{background-color: #05223A;color: #fff;} 
+.bg_white{background-color: #fff;}
+
+a.btn_goback{background-color: #CCC;font-size: 0.6em;float: right;}
+a.btn_goback:hover{background-color: #b7b6b6;}
+
+  
+/*按鈕樣式 END*/
+
+/* 表單排列 */
+.listline-2{position: relative;padding-left: 60px;min-height: 25px;}
+.listline-2 .tt{position: absolute;width: 60px;left: 0px;top:3px;}
+.listline-3{position: relative;padding-left: 75px;min-height: 25px;}
+.listline-3 .tt{position: absolute;width: 75px;left: 0px;top:3px;}
+.listline-4{position: relative;padding-left: 90px;min-height: 25px;}
+.listline-4 .tt{position: absolute;width: 90px;left: 0px;top:3px;}
+.listline-5{position: relative;padding-left: 105px;min-height: 25px;}
+.listline-5 .tt{position: absolute;width: 105px;left: 0px;top:3px;}
+.listline-6{position: relative;padding-left: 120px;min-height: 25px;}
+.listline-6 .tt{position: absolute;width: 120px;left: 0px;top:3px;}
+.listline-8{position: relative;padding-left: 160px;min-height: 25px;}
+.listline-8 .tt{position: absolute;width: 160px;left: 0px;top:3px;}
+
+ 
+.layoutBox{padding: 10px;margin: 10px; border-radius:5px;background-color: #fff;box-shadow: 0px 0px 15px 0px rgba(0,0,0,0.1);border:solid 1px #efefef;position: relative;}
+.layoutBox_P0{padding: 0px;}
+.layoutBox_M0{margin: 0px;}
+.layoutBox .toparea{padding: 10px;background-color: rgb(237, 250, 252);margin: -10px;border-bottom: solid 1px rgba(53,155,255,0.3);margin-bottom: 10px; }
+
+
+.searchbox{}
+.searchbox li{padding: 3px;} 
+.searchbox h3.tt{font-size: 1.125em;text-align: center;font-weight: 600;padding: 5px;}
+.searchbox .txt{padding: 5px;}
+.searchbox .btnarea{text-align: center;margin-top: 10px;padding: 5px;padding-top: 10px; border-top: solid 1px #efefef;}
+
+
+.main_Table{
+	box-sizing: border-box;
+	background: #ccc; 
+	width:100%; position: relative;  
+}
+
+
+.main_Table th { 
+	padding: 10px;line-height: 18px;
+    background-color: #0C512D; 
+	color: #fff; 
+    font-size: 1.01em;
+	font-weight: bold; 
+	text-align: center;  
+}  
+.main_Table td{ 
+   padding:5px ;text-align: center;
+}  
+ 
+
+.main_Table td .btn{margin:2px;}
+.main_Table tr:nth-child(even)  {background-color: rgb(237, 250, 252);}
+.main_Table tr:nth-child(odd) {background-color: #fff;}
+  
+  
+.main_Table.table_sub th {  
+	background-color: #fff;
+    border-bottom: solid 2px rgba(53,155,255,0.7);
+	color:  rgba(53,155,255,1); 
+    font-size: 1.04em; 
+}
+ 
+
+
+
+ .tableList{width: 100%;}  
+.tableList th{font-weight: 600;font-size: 1.05em; color: #333;text-align: center;border-bottom: solid 1px  rgba(53,155,255,0.5);padding: 10px;vertical-align: top;padding-top: 15px;}
+.tableList td{padding: 10px;border-bottom: solid 1px rgba(53,155,255,0.3);word-break: break-all;vertical-align: top;padding-top: 15px;}
+.tableList tr:nth-child(even){background-color: rgb(237, 250, 252);}
+.tableList tr:nth-child(odd){} 
+
+.tableList.nobgcolor tr:nth-child(even){background-color: #fff;}
+  .tableList th.w_md{width: 200px;} 
+.tableList th.w_mdx{width: 250px;} 
+  .tableList th.w_sm{width: 100px;}     
+ 
+/*頁數樣式*/
+.pageArea{padding:10px;margin-top: 5px;font-size: 0.9em;}
+.pageArea:after{display: block;content: "";clear: both;}
+.pagesTitle{line-height: 45px;} 
+.pages{ 
+	display: inline-block;
+	box-sizing: border-box;margin: 5px;
+} 
+.pages .con{display: inline-block;margin: 0px 5px;}
+.pages .con input{width: 40px;}
+.pages  a , .pages  a.current , .pages  span , .pages  span.current{
+    box-sizing: border-box;
+	border: solid 1px #efefef;
+	display: inline-block ;
+	margin: 0px;
+	color: #333;border-radius: 5px;
+	padding: 3px 8px;
+}
+.pages  a:hover , .pages  span:hover{
+	background-color: rgba(53,155,255,0.3);border: solid 1px #fff;
+}
+.pages  a.current , .pages  a.current:hover , .pages  span.current , .pages  span.current:hover{
+	background-color: #359BFF;
+	border: solid 1px #359BFF;
+	color: #fff;
+}
+
+/*頁數樣式  END*/
+
+  
+.uploadtextbox{display: inline-block;position: relative;background-color: #fff; border:solid 1px #d4d4d4;padding:3px 8px;margin: 3px;padding-right: 40px;vertical-align: middle;}
+.uploadtextbox .btn_close{position: absolute;top:0px;right: 0px;width: 18px;height: 18px;font-size: 0.8em;text-align: center; line-height: 15px; background-color: #efefef;border-style: none;display: block;padding: 0px 5px;text-decoration: none;color: #333;border-bottom: solid 1px #d4d4d4;border-left: solid 1px #d4d4d4;}
+.uploadtextbox .btn_close:hover{background-color: #F47A7C;text-decoration: none;}
+
+/*匯入檔案步驟*/
+		.upfilebox{}
+		.upfilebox .btn:hover{background-color: transparent;color: #333;cursor:default;;}
+		.upfilebox .btn.active{background-color: #007A20;border:solid 1px #007A20;color: #fff;}
+		.pfile_pane{position: relative;} 
+		.pfile_pane .tab-pane{display: none;}
+
+
+
+/*查詢災防緊急連繫通訊錄*/
+.membersearchbox{background-color: #efefef;}   
+.membersearchbox .root{padding: 5px;font-size: 0.9em;color: #046412;}
+.membersearchbox .btn_area{ padding: 10px;display: grid;gap:8px;}   
+.membersearchbox .btn_area .btn{font-size: 1.2em;font-weight: 600;}
+
+
+.membersearchbox .btn_area.grid-2{grid-template-columns:1fr 1fr;}
+.membersearchbox .btn_area.grid-2 .btn{height:100%;transition: all 0.5s;}
+
+.btn.btn_style01{background-color: #7BB900;}
+.btn.btn_style02{background-color:#EDA00F;}
+.btn.btn_style03{background-color:#43C6E1;}
+.btn.btn_style04{background-color:#EFD919;}
+.btn.btn_style01:hover , .btn.btn_style01:focus{background-color: #20980D;}
+.btn.btn_style02:hover , .btn.btn_style02:focus{background-color: #BB8807;}
+.btn.btn_style03:hover , .btn.btn_style03:focus{background-color: #2B7FC4;}
+.btn.btn_style04:hover , .btn.btn_style04:focus{background-color: #B8A70A;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

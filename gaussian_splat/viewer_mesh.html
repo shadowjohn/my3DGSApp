@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mesh GLB 檢視器</title>
+  <style>
+    html,
+    body,
+    #viewer-root {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #080b10;
+      color: #eef4fb;
+      font-family: Arial, "Noto Sans TC", sans-serif;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #status {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 10;
+      box-sizing: border-box;
+      width: min(420px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 6px;
+      background: rgba(8, 11, 16, .82);
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    #controls {
+      position: fixed;
+      left: 12px;
+      bottom: 12px;
+      z-index: 11;
+      box-sizing: border-box;
+      width: min(360px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 6px;
+      background: rgba(8, 11, 16, .86);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 46px;
+      gap: 10px;
+      align-items: center;
+      min-height: 34px;
+    }
+
+    .control-row + .control-row {
+      margin-top: 6px;
+    }
+
+    label {
+      color: #d8e5ef;
+      font-weight: 700;
+    }
+
+    input[type="checkbox"] {
+      justify-self: start;
+      width: 18px;
+      height: 18px;
+      accent-color: #38bdf8;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #38bdf8;
+    }
+
+    output {
+      color: #eef4fb;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    code {
+      color: #c9f0ff;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+    }
+
+    @media (max-width: 640px) {
+      #status {
+        font-size: 12px;
+      }
+
+      #controls {
+        font-size: 12px;
+      }
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/john_web/assets/vendor/three/0.165.0/build/three.module.js",
+        "three/addons/loaders/GLTFLoader.js": "/john_web/assets/vendor/three/0.165.0/examples/jsm/loaders/GLTFLoader.js",
+        "three/addons/controls/OrbitControls.js": "/john_web/assets/vendor/three/0.165.0/examples/jsm/controls/OrbitControls.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="viewer-root"></div>
+  <section id="status" aria-live="polite">
+    載入中 GLTFLoader with OrbitControls<br>
+    來源 source: <code>uploads/7/compare/mesh/cleaned_mesh.glb</code><br>
+    檔案大小 file size: 待處理<br>
+    頂點 vertex: 待處理<br>
+    三角面 triangle: 待處理
+  </section>
+  <section id="controls" aria-label="Mesh 控制項">
+    <div class="control-row">
+      <label for="wireframe">線框 wireframe</label>
+      <input id="wireframe" type="checkbox">
+      <output id="wireframe-value">關</output>
+    </div>
+    <div class="control-row">
+      <label for="opacity">透明度 opacity</label>
+      <input id="opacity" type="range" min="0.05" max="1" step="0.01" value="1">
+      <output id="opacity-value">1.00</output>
+    </div>
+  </section>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    const DEFAULT_SRC = "uploads/7/compare/mesh/cleaned_mesh.glb";
+    const params = new URLSearchParams(window.location.search);
+    const requestedSrc = params.get("src");
+    const requestedManifest = params.get("manifest");
+    const requestedStudioJobId = params.get("studio_job_id");
+    let src = requestedSrc || DEFAULT_SRC;
+
+    const root = document.getElementById("viewer-root");
+    const status = document.getElementById("status");
+    const wireframeInput = document.getElementById("wireframe");
+    const wireframeValue = document.getElementById("wireframe-value");
+    const opacityInput = document.getElementById("opacity");
+    const opacityValue = document.getElementById("opacity-value");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x080b10);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+    camera.position.set(3.5, 2.25, 4.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    root.appendChild(renderer.domElement);
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0, 0);
+    controls.enableDamping = true;
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.72);
+    scene.add(ambient);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    keyLight.position.set(3, 5, 4);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x8fc7ff, 0.45);
+    fillLight.position.set(-4, 2, -3);
+    scene.add(fillLight);
+
+    let meshRoot = null;
+    let metrics = {
+      fileSize: "待處理",
+      vertices: "待處理",
+      triangles: "待處理",
+      state: "載入中"
+    };
+
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) {
+        return "未知";
+      }
+      const units = ["B", "KB", "MB", "GB"];
+      let size = bytes;
+      let unit = 0;
+      while (size >= 1024 && unit < units.length - 1) {
+        size /= 1024;
+        unit += 1;
+      }
+      return `${size.toFixed(unit === 0 ? 0 : 2)} ${units[unit]}`;
+    }
+
+    function pathWithoutQuery(path) {
+      return path ? path.split(/[?#]/, 1)[0] : "";
+    }
+
+    function resolveManifestArtifactPath(manifestPath, artifactPath) {
+      if (!artifactPath || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(artifactPath)) return artifactPath || "";
+      const basePath = pathWithoutQuery(manifestPath).replace(/[^/]*$/, "");
+      return `${basePath}${artifactPath}`;
+    }
+
+    function resolveStudioPath(path) {
+      if (!path || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(path)) return path || "";
+      return `../${path.replace(/^\/+/, "")}`;
+    }
+
+    async function manifestPathFromStudioJob(studioJobId) {
+      const response = await fetch(`../studio/api.php?mode=job_detail&id=${encodeURIComponent(studioJobId)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Studio job API unavailable: ${studioJobId}`);
+      const data = await response.json();
+      if (data.status !== "OK") throw new Error(data.reason || `Studio job not found: ${studioJobId}`);
+      const manifestPath = data.job?.delivery_manifest_path || data.delivery_manifest_path || "";
+      if (!manifestPath) throw new Error(`Studio job has no delivery_manifest_path: ${studioJobId}`);
+      return resolveStudioPath(manifestPath);
+    }
+
+    async function manifestPathFromEntrypoint() {
+      if (requestedManifest) return requestedManifest;
+      if (requestedStudioJobId) return manifestPathFromStudioJob(requestedStudioJobId);
+      return "";
+    }
+
+    function legacyArtifactResult(manifest, type, manifestPath, warning) {
+      const artifacts = Array.isArray(manifest?.artifacts) ? manifest.artifacts : [];
+      const artifact = artifacts.find((item) => item?.type === type && item?.role === "primary")
+        || artifacts.find((item) => item?.type === type);
+      const path = resolveManifestArtifactPath(manifestPath, typeof artifact?.path === "string" ? artifact.path : "");
+      return path ? { path, warning: `legacy fallback: ${warning}` } : null;
+    }
+
+    function manifestArtifactResult(manifest, type, manifestPath = "") {
+      const tracks = Array.isArray(manifest?.delivery_tracks) ? manifest.delivery_tracks : [];
+      if (!tracks.length) {
+        return legacyArtifactResult(manifest, type, manifestPath, "delivery_tracks missing") || { path: "", error: "delivery_tracks missing" };
+      }
+      const track = tracks.find((item) => item?.track === type)
+        || tracks.find((item) => item?.primary_artifact?.type === type)
+        || (type === "mesh" ? tracks.find((item) => item?.primary_artifact?.type === "glb") : null);
+      if (!track) {
+        const error = type === "splat" ? "splat track missing" : "mesh track missing";
+        return legacyArtifactResult(manifest, type, manifestPath, error) || { path: "", error };
+      }
+      if (!track.primary_artifact?.path) {
+        const error = type === "splat" ? "primary_artifact missing for splat track" : "primary_artifact missing for mesh track";
+        return legacyArtifactResult(manifest, type, manifestPath, error) || { path: "", error };
+      }
+      return { path: resolveManifestArtifactPath(manifestPath, track.primary_artifact.path), warning: "" };
+    }
+
+    function artifactPathFromManifest(manifest, type, manifestPath = "") {
+      return manifestArtifactResult(manifest, type, manifestPath).path || "";
+    }
+
+    async function srcResultFromManifest(manifestPath, type) {
+      if (!manifestPath) return { path: "", error: "" };
+      try {
+        const response = await fetch(manifestPath, { cache: "no-store" });
+        if (!response.ok) return { path: "", error: `Delivery manifest not found: ${manifestPath}` };
+        return manifestArtifactResult(await response.json(), type, manifestPath);
+      } catch (error) {
+        console.warn("Delivery manifest unavailable", error);
+        return { path: "", error: `Delivery manifest not found: ${manifestPath}` };
+      }
+    }
+
+    async function srcResultFromEntrypoint(type) {
+      try {
+        return srcResultFromManifest(await manifestPathFromEntrypoint(), type);
+      } catch (error) {
+        return { path: "", error: error.message || "Delivery manifest not found" };
+      }
+    }
+
+    async function resourceExists(url) {
+      try {
+        const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+        return response.ok;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    async function readFileSize(url) {
+      try {
+        const head = await fetch(url, { method: "HEAD" });
+        const length = head.headers.get("content-length");
+        if (head.ok && length) {
+          return formatBytes(Number(length));
+        }
+      } catch (error) {
+        // Some local servers do not support HEAD for static assets.
+      }
+
+      return "未知";
+    }
+
+    function appendStatusLine(label, value, options = {}) {
+      const line = document.createElement("div");
+      if (options.prefix) {
+        line.textContent = options.prefix;
+        status.appendChild(line);
+        return;
+      }
+
+      const labelNode = document.createTextNode(`${label}: `);
+      line.appendChild(labelNode);
+
+      const valueNode = options.code
+        ? document.createElement("code")
+        : document.createElement("span");
+      valueNode.textContent = value;
+      line.appendChild(valueNode);
+      status.appendChild(line);
+    }
+
+    function updateStatus() {
+      status.textContent = "";
+      appendStatusLine("", "", {
+        prefix: `${metrics.state} GLTFLoader with OrbitControls`
+      });
+      appendStatusLine("來源 source", src, { code: true });
+      appendStatusLine("檔案大小 file size", metrics.fileSize);
+      appendStatusLine("頂點 vertex", metrics.vertices);
+      appendStatusLine("三角面 triangle", metrics.triangles);
+    }
+
+    function applyMaterialControls() {
+      const opacity = Number(opacityInput.value);
+      const wireframe = wireframeInput.checked;
+      opacityValue.textContent = opacity.toFixed(2);
+      wireframeValue.textContent = wireframe ? "開" : "關";
+
+      if (!meshRoot) {
+        return;
+      }
+
+      meshRoot.traverse((node) => {
+        if (!node.isMesh || !node.material) {
+          return;
+        }
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach((material) => {
+          const original = material.userData.meshViewerOriginal;
+          const originalOpacity = original ? original.opacity : 1;
+          const nextOpacity = originalOpacity * opacity;
+          material.wireframe = wireframe;
+          material.opacity = nextOpacity;
+          if (opacity < 1) {
+            material.transparent = true;
+            material.depthWrite = false;
+          } else if (original) {
+            material.transparent = original.transparent;
+            material.depthWrite = original.depthWrite;
+          } else {
+            material.transparent = nextOpacity < 1;
+            material.depthWrite = nextOpacity >= 1;
+          }
+          material.needsUpdate = true;
+        });
+      });
+    }
+
+    function cloneUserData(userData) {
+      try {
+        if (typeof structuredClone === "function") {
+          return structuredClone(userData);
+        }
+      } catch (error) {
+        // Fall through to the JSON copy for plain material metadata.
+      }
+
+      try {
+        return JSON.parse(JSON.stringify(userData || {}));
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function rememberOriginalMaterial(material) {
+      const originalUserData = cloneUserData(material.userData || {});
+      material.userData = {
+        ...material.userData,
+        meshViewerOriginal: {
+          transparent: material.transparent,
+          opacity: material.opacity,
+          depthWrite: material.depthWrite,
+          userData: originalUserData
+        }
+      };
+    }
+
+    function cloneMaterials(rootObject) {
+      rootObject.traverse((node) => {
+        if (!node.isMesh || !node.material) {
+          return;
+        }
+        node.material = Array.isArray(node.material)
+          ? node.material.map((material) => material.clone())
+          : node.material.clone();
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach(rememberOriginalMaterial);
+      });
+    }
+
+    function countGeometry(rootObject) {
+      let vertices = 0;
+      let triangles = 0;
+      rootObject.traverse((node) => {
+        if (!node.isMesh || !node.geometry) {
+          return;
+        }
+        const position = node.geometry.attributes.position;
+        if (position) {
+          vertices += position.count;
+        }
+        if (node.geometry.index) {
+          triangles += node.geometry.index.count / 3;
+        } else if (position) {
+          triangles += position.count / 3;
+        }
+      });
+      return {
+        vertices: Math.round(vertices).toLocaleString(),
+        triangles: Math.round(triangles).toLocaleString()
+      };
+    }
+
+    function normalizeLoadedMesh(rootObject) {
+      const box = new THREE.Box3().setFromObject(rootObject);
+      if (box.isEmpty()) {
+        return;
+      }
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const fitSize = 3.2;
+      rootObject.position.sub(center);
+      if (maxDim > 0) {
+        rootObject.scale.multiplyScalar(fitSize / maxDim);
+      }
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+
+    function pickMeshPosition(event) {
+      if (!meshRoot) return null;
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObject(meshRoot, true);
+      return hits.length ? hits[0].point.toArray() : null;
+    }
+
+    wireframeInput.addEventListener("change", applyMaterialControls);
+    opacityInput.addEventListener("input", applyMaterialControls);
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      const position = pickMeshPosition(event);
+      if (!position) return;
+      window.parent?.postMessage?.({ type: "mesh-viewer-pick", position }, "*");
+    });
+    applyMaterialControls();
+    updateStatus();
+
+    async function main() {
+      const manifestResult = requestedSrc ? null : await srcResultFromEntrypoint("mesh");
+      if (manifestResult?.error) {
+        metrics.state = manifestResult.error;
+        updateStatus();
+        return;
+      }
+      src = requestedSrc || manifestResult?.path || DEFAULT_SRC;
+      if (manifestResult?.path && !(await resourceExists(src))) {
+        metrics.state = `Artifact not found: ${src}`;
+        updateStatus();
+        return;
+      }
+      if (manifestResult?.warning) metrics.state = manifestResult.warning;
+      updateStatus();
+
+      readFileSize(src).then((fileSize) => {
+        metrics.fileSize = fileSize;
+        updateStatus();
+      });
+
+      const loader = new GLTFLoader();
+      loader.load(
+        src,
+        (gltf) => {
+          meshRoot = gltf.scene;
+          cloneMaterials(meshRoot);
+          scene.add(meshRoot);
+          normalizeLoadedMesh(meshRoot);
+          const counts = countGeometry(meshRoot);
+          metrics = {
+            ...metrics,
+            state: "已載入",
+            vertices: counts.vertices,
+            triangles: counts.triangles
+          };
+          applyMaterialControls();
+          updateStatus();
+        },
+        undefined,
+        (error) => {
+          metrics.state = "錯誤";
+          metrics.vertices = "無法取得";
+          metrics.triangles = "無法取得";
+          updateStatus();
+          console.error("GLTFLoader failed", error);
+        }
+      );
+    }
+
+    function resize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", resize);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+    main();
+  </script>
+</body>
+</html>

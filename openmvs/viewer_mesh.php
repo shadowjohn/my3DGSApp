@@ -1,0 +1,692 @@
+<?php
+  require __DIR__ . "/../inc/config.php";
+
+  function ovm_viewer_error_page($statusCode, $message){
+      http_response_code($statusCode);
+      $safeMessage = htmlspecialchars($message, ENT_QUOTES);
+      echo <<<HTML
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenMVS GLB Viewer</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#080b10;color:#eef4fb;font-family:Arial,"Noto Sans TC",sans-serif;}
+    .box{width:min(520px,calc(100vw - 32px));border:1px solid rgba(255,255,255,.2);border-radius:6px;background:#111827;padding:18px;line-height:1.7;}
+    h1{margin:0 0 8px;font-size:20px;}
+    a{color:#7dd3fc;}
+  </style>
+</head>
+<body>
+  <main class="box">
+    <h1>無法載入模型</h1>
+    <p>{$safeMessage}</p>
+    <p><a href="index.php">回 OpenMVS 列表</a></p>
+  </main>
+</body>
+</html>
+HTML;
+      exit();
+  }
+
+  $viewerJobId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+  if(!$viewerJobId) ovm_viewer_error_page(400, '缺少有效的 job id。');
+  $viewerProductId = filter_input(INPUT_GET, 'product_id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+  $rows = selectSQL_SAFE("SELECT `id`,`title`,`orin_filename`,`status`,`del` FROM `openmvs_jobs` WHERE `id`=? AND `del`='0' LIMIT 1", [$viewerJobId]);
+  if(empty($rows)) ovm_viewer_error_page(404, '找不到這筆 OpenMVS 工作，或資料已刪除。');
+
+  $viewerSrc = '';
+  $viewerPath = '';
+  $viewerProductSize = 0;
+  if($viewerProductId){
+      $products = selectSQL_SAFE("SELECT * FROM `openmvs_products` WHERE `id`=? AND `job_id`=? AND `del`='0' LIMIT 1", [$viewerProductId, $viewerJobId]);
+      if(empty($products)) ovm_viewer_error_page(404, '找不到這筆產品。');
+      $product = $products[0];
+      $viewerProductSize = (int)($product['texture_size'] ?? 0);
+      $viewerSrc = trim((string)($product['file_path'] ?? ''));
+      if($viewerSrc === '') $viewerSrc = "uploads/{$viewerJobId}/products/glb_{$viewerProductSize}/model.glb";
+      if(
+          (string)($product['product_type'] ?? '') !== 'glb' ||
+          (string)($product['status'] ?? '') !== '2' ||
+          !in_array($viewerProductSize, [512, 2048, 4096, 8192], true) ||
+          !preg_match("~^uploads/{$viewerJobId}/products/glb_(?:512|2048|4096|8192)/model\\.glb$~", $viewerSrc)
+      ){
+          ovm_viewer_error_page(404, '這筆產品尚未完成或路徑不合法。');
+      }
+      $viewerPath = __DIR__ . "/{$viewerSrc}";
+      if(!is_file($viewerPath)) ovm_viewer_error_page(404, '找不到產品 GLB 檔案。');
+  } else {
+      $viewerSrcCandidates = [
+          "uploads/{$viewerJobId}/exports/model_2048_webp.glb",
+          "uploads/{$viewerJobId}/exports/model.glb",
+      ];
+      foreach($viewerSrcCandidates as $viewerSrc){
+          $viewerPath = __DIR__ . "/{$viewerSrc}";
+          if(is_file($viewerPath)) break;
+          $viewerSrc = '';
+          $viewerPath = '';
+      }
+  }
+  if($viewerSrc === '') ovm_viewer_error_page(404, '這筆工作尚未產生 GLB 檔案。');
+
+  $viewerFileSize = filesize($viewerPath);
+  $viewerFileMtime = filemtime($viewerPath) ?: time();
+  $viewerPortraitCapture = false;
+  $viewerFirstFramePath = __DIR__ . "/uploads/{$viewerJobId}/images/frame_00001.jpg";
+  $viewerFirstFrameSize = is_file($viewerFirstFramePath) ? @getimagesize($viewerFirstFramePath) : false;
+  if(is_array($viewerFirstFrameSize) && (int)$viewerFirstFrameSize[1] > (int)$viewerFirstFrameSize[0]) $viewerPortraitCapture = true;
+  $viewerUuid = bin2hex(random_bytes(16));
+  if(!isset($_SESSION['openmvs_glb_tokens']) || !is_array($_SESSION['openmvs_glb_tokens'])) $_SESSION['openmvs_glb_tokens'] = [];
+  foreach($_SESSION['openmvs_glb_tokens'] as $token => $item){
+      if((int)($item['expires'] ?? 0) < time()) unset($_SESSION['openmvs_glb_tokens'][$token]);
+  }
+  $_SESSION['openmvs_glb_tokens'][$viewerUuid] = [
+      'id' => $viewerJobId,
+      'path' => $viewerSrc,
+      'size' => $viewerFileSize,
+      'mtime' => $viewerFileMtime,
+      'expires' => time() + 3600,
+  ];
+  $viewerSrc = "api.php?mode=getGLB&uuid={$viewerUuid}";
+  $viewerTitle = trim((string)($rows[0]['title'] ?? ''));
+  if($viewerTitle === '') $viewerTitle = trim((string)($rows[0]['orin_filename'] ?? ''));
+  if($viewerTitle === '') $viewerTitle = "OpenMVS job #{$viewerJobId}";
+  $viewerSourceLabel = $viewerProductSize > 0 ? "OpenMVS job #{$viewerJobId} / GLB {$viewerProductSize}" : "OpenMVS job #{$viewerJobId} / " . basename($viewerPath);
+?>
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenMVS GLB Viewer</title>
+  <style>
+    html,
+    body,
+    #viewer-root {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #080b10;
+      color: #eef4fb;
+      font-family: Arial, "Noto Sans TC", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas.is-dragging {
+      cursor: grabbing;
+    }
+
+    #status,
+    #controls {
+      position: fixed;
+      z-index: 10;
+      box-sizing: border-box;
+      width: min(420px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 6px;
+      background: rgba(8, 11, 16, .82);
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    #status {
+      left: 12px;
+      top: 12px;
+    }
+
+    #controls {
+      left: 12px;
+      bottom: 12px;
+      width: min(360px, calc(100vw - 24px));
+      background: rgba(8, 11, 16, .86);
+    }
+
+    #viewer-help {
+      margin-top: 8px;
+      color: #cbd5e1;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 46px;
+      gap: 10px;
+      align-items: center;
+      min-height: 34px;
+    }
+
+    .control-row + .control-row {
+      margin-top: 6px;
+    }
+
+    .viewer-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .viewer-actions button {
+      min-height: 30px;
+      border: 1px solid rgba(255, 255, 255, .25);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, .1);
+      color: #eef4fb;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .viewer-actions button:hover {
+      background: rgba(255, 255, 255, .18);
+    }
+
+    label {
+      color: #d8e5ef;
+      font-weight: 700;
+    }
+
+    input[type="checkbox"] {
+      justify-self: start;
+      width: 18px;
+      height: 18px;
+      accent-color: #38bdf8;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #38bdf8;
+    }
+
+    output {
+      color: #eef4fb;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    code {
+      color: #c9f0ff;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+    }
+
+    .ovm-load-progress {
+      height: 7px;
+      margin-top: 8px;
+      border: 1px solid rgba(148, 163, 184, .42);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .86);
+      overflow: hidden;
+    }
+
+    .ovm-load-progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: #38bdf8;
+      transition: width .16s linear;
+    }
+	  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/john_web/assets/vendor/three/0.165.0/build/three.module.js",
+        "three/addons/loaders/GLTFLoader.js": "/john_web/assets/vendor/three/0.165.0/examples/jsm/loaders/GLTFLoader.js",
+        "three/addons/controls/OrbitControls.js": "/john_web/assets/vendor/three/0.165.0/examples/jsm/controls/OrbitControls.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="viewer-root"></div>
+  <section id="status" aria-live="polite"></section>
+  <section id="controls" aria-label="Mesh controls">
+    <div class="control-row">
+      <label for="wireframe">wireframe</label>
+      <input id="wireframe" type="checkbox">
+      <output id="wireframe-value">off</output>
+    </div>
+    <div class="control-row">
+      <label for="opacity">opacity</label>
+      <input id="opacity" type="range" min="0.05" max="1" step="0.01" value="1">
+      <output id="opacity-value">1.00</output>
+    </div>
+    <div class="viewer-actions">
+      <button id="reset-view" type="button">重設視角</button>
+    </div>
+    <div id="viewer-help">滑鼠拖曳旋轉 / 右鍵平移 / 滾輪縮放 / W/F 前進 / S/B 後退 / A/D 左右</div>
+  </section>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    const VIEWER_JOB_ID = <?=json_encode($viewerJobId);?>;
+    const VIEWER_RESOLVED_SRC = <?=json_encode($viewerSrc, JSON_UNESCAPED_SLASHES);?>;
+    const VIEWER_SOURCE_LABEL = <?=json_encode($viewerSourceLabel, JSON_UNESCAPED_UNICODE);?>;
+    const VIEWER_FILE_SIZE_BYTES = <?=json_encode((int)$viewerFileSize);?>;
+    const VIEWER_PORTRAIT_CAPTURE = <?=json_encode($viewerPortraitCapture);?>;
+    const DEFAULT_SRC = VIEWER_RESOLVED_SRC || "uploads/1/exports/model.glb";
+    const params = new URLSearchParams(window.location.search);
+    const src = DEFAULT_SRC;
+    const cacheKey = params.get("v") || params.get("ovm_cache") || <?=json_encode((string)$viewerFileMtime);?>;
+    const modelResourceBase = new URL(".", new URL(src, window.location.href)).href;
+
+    const root = document.getElementById("viewer-root");
+    const status = document.getElementById("status");
+    const wireframeInput = document.getElementById("wireframe");
+    const wireframeValue = document.getElementById("wireframe-value");
+    const opacityInput = document.getElementById("opacity");
+    const opacityValue = document.getElementById("opacity-value");
+    const resetViewButton = document.getElementById("reset-view");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x080b10);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.0001, 500);
+    camera.position.set(0.35, 1.45, -5.95);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    root.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0, 0);
+    controls.enableDamping = true;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.screenSpacePanning = true;
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.ROTATE,
+      RIGHT: THREE.MOUSE.PAN
+    };
+    controls.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN
+    };
+    controls.minDistance = 0.02;
+    controls.maxDistance = 80;
+    controls.rotateSpeed = 0.72;
+    controls.panSpeed = 0.82;
+    controls.zoomSpeed = 1.18;
+    if ("zoomToCursor" in controls) controls.zoomToCursor = true;
+    controls.saveState();
+
+    let normalizedModelSize = 3.2;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    keyLight.position.set(3, 5, 4);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0x8fc7ff, 0.45);
+    fillLight.position.set(-4, 2, -3);
+    scene.add(fillLight);
+
+    let meshRoot = null;
+    let metrics = {
+      fileSize: VIEWER_FILE_SIZE_BYTES > 0 ? formatBytes(VIEWER_FILE_SIZE_BYTES) : "pending",
+      vertices: "pending",
+      triangles: "pending",
+      state: "Downloading",
+      progressLabel: "下載 GLB",
+      progressValue: "0%",
+      progressDetail: "等待下載"
+    };
+
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) return "unknown";
+      const units = ["B", "KB", "MB", "GB"];
+      let size = bytes;
+      let unit = 0;
+      while (size >= 1024 && unit < units.length - 1) {
+        size /= 1024;
+        unit += 1;
+      }
+      return `${size.toFixed(unit === 0 ? 0 : 2)} ${units[unit]}`;
+    }
+
+    function appendStatusLine(label, value, code = false) {
+      const line = document.createElement("div");
+      const labelNode = document.createTextNode(label ? `${label}: ` : value);
+      line.appendChild(labelNode);
+      if (label) {
+        const valueNode = code ? document.createElement("code") : document.createElement("span");
+        valueNode.textContent = value;
+        line.appendChild(valueNode);
+      }
+      status.appendChild(line);
+    }
+
+    function appendLoadProgress() {
+      const value = metrics.progressDetail ? `${metrics.progressValue} (${metrics.progressDetail})` : metrics.progressValue;
+      appendStatusLine(metrics.progressLabel, value);
+      const bar = document.createElement("div");
+      const fill = document.createElement("span");
+      bar.className = "ovm-load-progress";
+      bar.setAttribute("aria-label", "GLB loading progress");
+      fill.style.width = metrics.progressValue;
+      bar.appendChild(fill);
+      status.appendChild(bar);
+    }
+
+    function updateStatus() {
+      status.textContent = "";
+      appendStatusLine("", `${metrics.state} GLB with OrbitControls`);
+      appendStatusLine("source", VIEWER_SOURCE_LABEL, true);
+      appendStatusLine("file size", metrics.fileSize);
+      if (metrics.state === "Downloading" || metrics.state === "Loading") appendLoadProgress();
+      appendStatusLine("vertex", metrics.vertices);
+      appendStatusLine("triangle", metrics.triangles);
+    }
+
+    function rememberOriginalMaterial(material) {
+      material.userData = {
+        ...material.userData,
+        meshViewerOriginal: {
+          transparent: material.transparent,
+          opacity: material.opacity,
+          depthWrite: material.depthWrite
+        }
+      };
+    }
+
+    function cloneMaterials(rootObject) {
+      rootObject.traverse((node) => {
+        if (!(node.isMesh || node.isPoints) || !node.material) return;
+        node.material = Array.isArray(node.material)
+          ? node.material.map((material) => material.clone())
+          : node.material.clone();
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach((material) => {
+          if (node.isPoints && material.isPointsMaterial) {
+            material.size = Math.max(material.size || 0, 0.012);
+            material.sizeAttenuation = true;
+          }
+          rememberOriginalMaterial(material);
+        });
+      });
+    }
+
+    function countGeometry(rootObject) {
+      let vertices = 0;
+      let triangles = 0;
+      rootObject.traverse((node) => {
+        if (!(node.isMesh || node.isPoints) || !node.geometry) return;
+        const position = node.geometry.attributes.position;
+        if (position) vertices += position.count;
+        if (node.isPoints) return;
+        if (node.geometry.index) triangles += node.geometry.index.count / 3;
+        else if (position) triangles += position.count / 3;
+      });
+      return {
+        vertices: Math.round(vertices).toLocaleString(),
+        triangles: Math.round(triangles).toLocaleString()
+      };
+    }
+
+    function normalizeLoadedMesh(rootObject) {
+      const box = new THREE.Box3().setFromObject(rootObject);
+      if (box.isEmpty()) return;
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      rootObject.position.sub(center);
+      if (maxDim > 0) {
+        normalizedModelSize = 3.2;
+        rootObject.scale.multiplyScalar(normalizedModelSize / maxDim);
+      }
+      rootObject.rotation.z = Math.PI - (VIEWER_PORTRAIT_CAPTURE ? Math.PI / 2 : 0);
+      rootObject.updateMatrixWorld(true);
+      const rotatedBox = new THREE.Box3().setFromObject(rootObject);
+      if (!rotatedBox.isEmpty()) {
+        rootObject.position.sub(rotatedBox.getCenter(new THREE.Vector3()));
+        rootObject.updateMatrixWorld(true);
+      }
+      controls.target.set(0, 0, 0);
+      controls.minDistance = Math.max(normalizedModelSize * 0.006, 0.01);
+      controls.maxDistance = Math.max(normalizedModelSize * 28, 40);
+      controls.update();
+      controls.saveState();
+    }
+
+    function applyMaterialControls() {
+      const opacity = Number(opacityInput.value);
+      const wireframe = wireframeInput.checked;
+      opacityValue.textContent = opacity.toFixed(2);
+      wireframeValue.textContent = wireframe ? "on" : "off";
+      if (!meshRoot) return;
+      meshRoot.traverse((node) => {
+        if (!(node.isMesh || node.isPoints) || !node.material) return;
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach((material) => {
+          const original = material.userData.meshViewerOriginal;
+          const nextOpacity = (original ? original.opacity : 1) * opacity;
+          if (node.isMesh) material.wireframe = wireframe;
+          if (node.isPoints && material.isPointsMaterial) {
+            material.size = Math.max(normalizedModelSize * 0.004, 0.012);
+            material.sizeAttenuation = true;
+          }
+          material.opacity = nextOpacity;
+          material.transparent = opacity < 1 || (original ? original.transparent : false);
+          material.depthWrite = opacity >= 1 && (original ? original.depthWrite : true);
+          material.needsUpdate = true;
+        });
+      });
+    }
+
+    function isTypingTarget(target) {
+      const tagName = target?.tagName?.toLowerCase();
+      return target?.isContentEditable || ["input", "textarea", "select", "button"].includes(tagName);
+    }
+
+    function viewerMoveStep() {
+      return Math.max(normalizedModelSize * 0.08, 0.08);
+    }
+
+    function moveCameraByVector(vector) {
+      camera.position.add(vector);
+      controls.target.add(vector);
+      controls.update();
+    }
+
+    function moveCameraAlongView(direction) {
+      const view = new THREE.Vector3();
+      camera.getWorldDirection(view);
+      view.multiplyScalar(viewerMoveStep() * direction);
+      moveCameraByVector(view);
+    }
+
+    function moveCameraSideways(direction) {
+      const view = new THREE.Vector3();
+      camera.getWorldDirection(view);
+      const right = new THREE.Vector3().crossVectors(view, camera.up).normalize();
+      right.multiplyScalar(viewerMoveStep() * direction);
+      moveCameraByVector(right);
+    }
+
+    function resetViewerCamera() {
+      controls.reset();
+      controls.update();
+    }
+
+    function handleViewerKeyDown(event) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || isTypingTarget(event.target)) return;
+      const keyActions = {
+        KeyW: () => moveCameraAlongView(1),
+        KeyF: () => moveCameraAlongView(1),
+        KeyS: () => moveCameraAlongView(-1),
+        KeyB: () => moveCameraAlongView(-1),
+        KeyA: () => moveCameraSideways(-1),
+        KeyD: () => moveCameraSideways(1)
+      };
+      const action = keyActions[event.code];
+      if (!action) return;
+      event.preventDefault();
+      action();
+    }
+
+    wireframeInput.addEventListener("change", applyMaterialControls);
+    opacityInput.addEventListener("input", applyMaterialControls);
+    resetViewButton.addEventListener("click", resetViewerCamera);
+    window.addEventListener("keydown", handleViewerKeyDown);
+    renderer.domElement.addEventListener("pointerdown", () => renderer.domElement.classList.add("is-dragging"));
+    renderer.domElement.addEventListener("pointerup", () => renderer.domElement.classList.remove("is-dragging"));
+    renderer.domElement.addEventListener("pointerleave", () => renderer.domElement.classList.remove("is-dragging"));
+    renderer.domElement.addEventListener("contextmenu", (event) => event.preventDefault());
+    updateStatus();
+
+    function appendCacheKey(url) {
+      if (!cacheKey || /^(data:|blob:)/i.test(url)) return url;
+      const hashIndex = url.indexOf("#");
+      const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
+      const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+      const separator = base.includes("?") ? "&" : "?";
+      return `${base}${separator}ovm_cache=${encodeURIComponent(cacheKey)}${hash}`;
+    }
+
+    function resolveModelResourceUrl(url) {
+      if (/^blob:/i.test(url)) {
+        if (!/\.(png|jpe?g|webp|ktx2|bin)([?#].*)?$/i.test(url)) return url;
+        url = url.slice(url.lastIndexOf("/") + 1);
+      }
+      if (/^(data:|[a-z][a-z0-9+.-]*:|\/\/|\/)/i.test(url)) return appendCacheKey(url);
+      return appendCacheKey(new URL(url, modelResourceBase).href);
+    }
+
+    const loadingManager = new THREE.LoadingManager();
+    loadingManager.setURLModifier((url) => resolveModelResourceUrl(url));
+    const loader = new GLTFLoader(loadingManager);
+    loader.setResourcePath(modelResourceBase);
+
+    function setProgress(label, value, detail = "") {
+      metrics.progressLabel = label;
+      metrics.progressValue = value;
+      metrics.progressDetail = detail;
+      updateStatus();
+    }
+
+    function updateProgressFromEvent(label, event, fallbackTotal = 0) {
+      const total = event.lengthComputable && event.total > 0 ? event.total : fallbackTotal;
+      if (total > 0) {
+        const percent = Math.min(100, Math.round((event.loaded / total) * 100));
+        metrics.fileSize = formatBytes(total);
+        setProgress(label, `${percent}%`, `${formatBytes(event.loaded)} / ${formatBytes(total)}`);
+      } else if (event.loaded > 0) {
+        setProgress(label, metrics.progressValue || "0%", `${formatBytes(event.loaded)} / unknown`);
+      }
+    }
+
+    function downloadGlb(url) {
+      return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        let expectedBytes = VIEWER_FILE_SIZE_BYTES > 0 ? VIEWER_FILE_SIZE_BYTES : 0;
+        if (expectedBytes > 0) metrics.fileSize = formatBytes(expectedBytes);
+        const rememberExpectedBytes = () => {
+          const bytes = Number(request.getResponseHeader("Content-Length"));
+          if (Number.isFinite(bytes) && bytes > 0) {
+            expectedBytes = bytes;
+            metrics.fileSize = formatBytes(bytes);
+          }
+        };
+        request.open("GET", url, true);
+        request.responseType = "blob";
+        request.onloadstart = () => setProgress("下載 GLB", "0%", "開始下載");
+        request.onreadystatechange = () => {
+          if (request.readyState >= 2) rememberExpectedBytes();
+        };
+        request.onprogress = (event) => {
+          rememberExpectedBytes();
+          updateProgressFromEvent("下載 GLB", event, expectedBytes);
+        };
+        request.onerror = () => reject(new Error("GLB download failed"));
+        request.onload = () => {
+          if (request.status < 200 || request.status >= 300) {
+            reject(new Error(`GLB download failed: ${request.status}`));
+            return;
+          }
+          metrics.fileSize = formatBytes(request.response.size);
+          setProgress("下載 GLB", "100%", `${formatBytes(request.response.size)} / ${formatBytes(request.response.size)}`);
+          resolve(URL.createObjectURL(request.response));
+        };
+        request.send();
+      });
+    }
+
+    function loadGlb(objectUrl) {
+      metrics.state = "Loading";
+      metrics.progressLabel = "載入 GLB";
+      metrics.progressValue = "0%";
+      metrics.progressDetail = "解析模型";
+      updateStatus();
+      loader.load(
+        objectUrl,
+        (gltf) => {
+          meshRoot = gltf.scene;
+          cloneMaterials(meshRoot);
+          scene.add(meshRoot);
+          normalizeLoadedMesh(meshRoot);
+          const counts = countGeometry(meshRoot);
+          metrics = {
+            ...metrics,
+            state: "Loaded",
+            progressLabel: "載入 GLB",
+            progressValue: "100%",
+            progressDetail: "",
+            fileSize: metrics.fileSize === "pending" ? "unknown" : metrics.fileSize,
+            vertices: counts.vertices,
+            triangles: counts.triangles
+          };
+          applyMaterialControls();
+          updateStatus();
+          URL.revokeObjectURL(objectUrl);
+        },
+        (event) => updateProgressFromEvent("載入 GLB", event),
+        (error) => {
+          metrics.state = "Error";
+          metrics.vertices = "unavailable";
+          metrics.triangles = "unavailable";
+          updateStatus();
+          URL.revokeObjectURL(objectUrl);
+          console.error("GLTFLoader failed", error);
+        }
+      );
+    }
+
+	    downloadGlb(appendCacheKey(src)).then(loadGlb).catch((error) => {
+	      metrics.state = "Error";
+	      metrics.vertices = "unavailable";
+	      metrics.triangles = "unavailable";
+	      updateStatus();
+	      console.error(error);
+	    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

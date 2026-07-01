@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "studio_job_id": "fixture-qa",
+  "mode": "qa",
+  "status": "review_needed",
+  "generated_at": "2026-06-28T00:10:00+08:00",
+  "delivery_tracks": [
+    {
+      "track": "mesh",
+      "engine": "openmvs",
+      "role": "delivery_candidate",
+      "delivery_capable": true,
+      "primary_artifact": {
+        "type": "glb",
+        "path": "artifacts/openmvs/model.glb"
+      },
+      "preview_artifacts": [],
+      "contract_path": "artifacts/openmvs/engine_contract.json",
+      "validation_report_path": "artifacts/openmvs/validation/validation_report.json"
+    },
+    {
+      "track": "splat",
+      "engine": "gaussian_splat",
+      "role": "diagnostic",
+      "delivery_capable": false,
+      "primary_artifact": {
+        "type": "splat",
+        "path": "artifacts/gaussian/splat.ply"
+      },
+      "preview_artifacts": [],
+      "contract_path": "artifacts/gaussian/engine_contract.json",
+      "validation_report_path": "artifacts/gaussian/appearance_summary.json"
+    }
+  ],
+  "qa_report_path": "validation/qa_validation_report.json"
+}

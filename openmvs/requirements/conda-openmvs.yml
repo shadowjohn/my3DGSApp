@@ -1,0 +1,17 @@
+channels:
+  - nvidia/label/cuda-12.8.0
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - c-compiler
+  - cxx-compiler
+  - cuda-toolkit=12.8.0
+  - ffmpeg
+  - pillow
+  - numpy
+  - opencv
+  - pytest
+  - cmake
+  - ninja
+  - git
